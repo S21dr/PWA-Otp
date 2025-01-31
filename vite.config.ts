@@ -8,4 +8,5 @@ export default defineConfig({
     allowedHosts: ['rare-brooms-swim.loca.lt', 'localhost', '192.168.0.103'], // Разрешить доступ с твоего IP и других хостов.
   },
   plugins: [react()],
+  base: "/PWA-Otp/", // YOUR REPO NAME HERE
 })
