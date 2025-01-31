@@ -7,7 +7,11 @@ const root  = createRoot(document.getElementById('root') as HTMLElement)
 
 const prepareApp = async () => {
     const { worker } = await import('./mocks/browser')
-    return  worker.start();
+    return  worker.start({
+        serviceWorker: {
+            url: "./mockServiceWorker.js",
+        },
+    });
 }
 
 prepareApp().then(()=>{
@@ -21,7 +25,7 @@ prepareApp().then(()=>{
 // Регистрация Service Worker для PWA
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker
-        .register("/sw.js")
+        .register("./sw.js")
         .then(() => console.log("✅ Service Worker зарегистрирован"))
         .catch((err) => console.error("❌ Ошибка регистрации Service Worker:", err));
 }
