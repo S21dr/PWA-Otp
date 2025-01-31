@@ -1,5 +1,5 @@
 import {FunctionComponent, useEffect, useState} from "react";
-import {openDB} from "idb";
+import {IDBPDatabase, openDB} from "idb";
 
 interface OwnProps {
     handleChangeAuth: (auth:boolean) => void
@@ -11,7 +11,7 @@ const BiometricAuth:  FunctionComponent<Props> = ({handleChangeAuth}) => {
 
     const [isBiometricProhibited, setIsBiometricProhibited] = useState(false)
     const [isBiometricRegistered, setIsBiometricRegistered] = useState(false)
-    const [db, setDb] = useState(null);
+    const [db, setDb] = useState<IDBPDatabase<unknown> | null>(null);
 
 
     const rejectBiometric = async () => {
@@ -55,7 +55,7 @@ const BiometricAuth:  FunctionComponent<Props> = ({handleChangeAuth}) => {
                     id: credential.id,
                     rawId: Array.from(new Uint8Array(credential.rawId)),
                     response: {
-                        attestationObject: Array.from(new Uint8Array(credential.response.attestationObject)),
+                        attestationObject: Array.from(new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject)),
                         clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
                     },
                     type: credential.type,
@@ -107,9 +107,9 @@ const BiometricAuth:  FunctionComponent<Props> = ({handleChangeAuth}) => {
                     id: credential.id,
                     rawId: Array.from(new Uint8Array(credential.rawId)),
                     response: {
-                        authenticatorData: Array.from(new Uint8Array(credential.response.authenticatorData)),
+                        authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
                         clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-                        signature: Array.from(new Uint8Array(credential.response.signature)),
+                        signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature)),
                     },
                     type: credential.type,
                 }),
@@ -129,7 +129,7 @@ const BiometricAuth:  FunctionComponent<Props> = ({handleChangeAuth}) => {
     }
 
     useEffect(() => {
-        if (window.PublicKeyCredential) {
+        if (window?.PublicKeyCredential) {
             setSupported(true);
         }
 

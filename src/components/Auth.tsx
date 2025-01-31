@@ -10,7 +10,6 @@ type Props = OwnProps;
 const AuthComponent: FunctionComponent<Props> = ({handleChangeAuth}) => {
     const [loadPage, setLoadPage] = useState(true)
     const [isPinSet, setIsPinSet] = useState(false);
-    const [errorMessage, setErrorMessage] = useState("");
 
     const handleChangeIsPinSet = (arg: boolean) => {
         setIsPinSet(arg)
@@ -43,7 +42,7 @@ const AuthComponent: FunctionComponent<Props> = ({handleChangeAuth}) => {
                     <h4>Аутентификация</h4>
                     <PinAuth isPinSet={isPinSet} setIsPinSet={handleChangeIsPinSet} handleChangeAuth={handleChangeAuth}/>
                     {isPinSet && <BiometricAuth handleChangeAuth={handleChangeAuth}/>}
-                    {errorMessage && <p style={{color: "red"}}>{errorMessage}</p>}
+
                 </div>
         }
 

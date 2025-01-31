@@ -7,7 +7,7 @@ function App() {
 
     const [authenticated, setAuthenticated] = useState<boolean>(false);
     const handleChangeAuth = (auth:boolean) => {
-      setAuthenticated(true)
+      setAuthenticated(auth)
     }
 
     return (

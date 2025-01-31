@@ -1,4 +1,4 @@
-import { authenticator } from "otplib";
+//import { authenticator } from "otplib";
 import {useEffect, useState} from "react";
 
 const OTPGenerator: React.FC = () => {

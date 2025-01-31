@@ -1,14 +1,12 @@
-import React, {useState, useEffect, FunctionComponent} from "react";
-import {openDB} from "idb";
-import {b} from "msw/lib/glossary-de6278a9";
-
+import  {useState, useEffect, FunctionComponent} from "react";
+import {IDBPDatabase, openDB} from "idb";
 // Функция для генерации соли (для шифрования)
 function generateSalt() {
     return crypto.getRandomValues(new Uint8Array(16));
 }
 
 // Функция для шифрования пин-кода с использованием Web Crypto API
-async function encryptPin(pin, salt) {
+async function encryptPin(pin:string, salt: Uint8Array) {
     const encoder = new TextEncoder();
     const data = encoder.encode(pin); // Преобразуем пин-код в массив байтов
 
@@ -46,7 +44,7 @@ async function encryptPin(pin, salt) {
 }
 
 // Функция для дешифрования пин-кода
-async function decryptPin(encryptedPin, salt) {
+async function decryptPin(encryptedPin:ArrayBuffer, salt: Uint8Array) {
     const key = await crypto.subtle.importKey(
         "raw",
         salt,
@@ -89,7 +87,7 @@ type Props = OwnProps;
 const PinAuth: FunctionComponent<Props> = ({isPinSet,setIsPinSet, handleChangeAuth}) => {
     const [pinCode, setPinCode] = useState("");
     const [errorMessage, setErrorMessage] = useState("");
-    const [db, setDb] = useState(null);
+    const [db, setDb] = useState<IDBPDatabase<unknown> | null>(null);
 
 
     useEffect(() => {
@@ -113,7 +111,7 @@ const PinAuth: FunctionComponent<Props> = ({isPinSet,setIsPinSet, handleChangeAu
         initializeDb();
     }, []);
 
-    const handlePinChange = (e) => {
+    const handlePinChange = (e:any) => {
         setPinCode(e.target.value);
     };
 
