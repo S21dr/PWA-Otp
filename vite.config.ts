@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react-swc'
 export default defineConfig({
   server: {
     host: '0.0.0.0',  // Это позволяет серверу слушать на всех интерфейсах, включая внешний IP.
-    allowedHosts: ['rare-brooms-swim.loca.lt', 'localhost', '192.168.0.103'], // Разрешить доступ с твоего IP и других хостов.
+    allowedHosts: ['s21dr.github.io/PWA-Otp/', 'localhost', '192.168.0.103'], // Разрешить доступ с твоего IP и других хостов.
   },
   plugins: [react()],
   base: "/PWA-Otp/", // YOUR REPO NAME HERE

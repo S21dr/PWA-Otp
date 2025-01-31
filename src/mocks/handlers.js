@@ -16,7 +16,7 @@ export const handlers = [
             challenge: generateChallenge(), // ✅ Теперь challenge в формате ArrayBuffer
             rp: {
                 name: "Example Corp",
-                id: "rare-brooms-swim.loca.lt"
+                id: "s21dr.github.io/PWA-Otp/"
             },
             user: {
                 id: userId, // ✅ ID в формате ArrayBuffer
@@ -39,7 +39,7 @@ export const handlers = [
         return HttpResponse.json({
             challenge: generateChallenge(), // ✅ challenge в формате ArrayBuffer
             timeout: 60000,
-            rpId: "rare-brooms-swim.loca.lt",
+            rpId: "s21dr.github.io/PWA-Otp/",
             userVerification: "required",
         });
     }),
