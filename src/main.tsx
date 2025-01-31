@@ -22,10 +22,11 @@ prepareApp().then(()=>{
     )
 })
 
-// Регистрация Service Worker для PWA
-if ("serviceWorker" in navigator) {
-    navigator.serviceWorker
-        .register("./sw.js")
-        .then(() => console.log("✅ Service Worker зарегистрирован"))
-        .catch((err) => console.error("❌ Ошибка регистрации Service Worker:", err));
-}
+
+// // Регистрация Service Worker для PWA
+// if ("serviceWorker" in navigator) {
+//     navigator.serviceWorker
+//         .register("./sw.js")
+//         .then(() => console.log("✅ Service Worker зарегистрирован"))
+//         .catch((err) => console.error("❌ Ошибка регистрации Service Worker:", err));
+// }

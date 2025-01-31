@@ -12,14 +12,23 @@ const PACKAGE_VERSION = '2.7.0'
 const INTEGRITY_CHECKSUM = '00729d72e3b82faf54ca8b9621dbb96f'
 const IS_MOCKED_RESPONSE = Symbol('isMockedResponse')
 const activeClientIds = new Set()
+self.addEventListener("install", (event) => {
+  event.waitUntil(
+      caches.open("pwa-cache").then((cache) => {
+        return cache.addAll([
+          "/PWA-Otp/",
+          "/PWA-Otp/index.html",
+          "/PWA-Otp/offline.html"
+        ]);
+      })
+  );
+  self.skipWaiting();
+});
 
-self.addEventListener('install', function () {
-  self.skipWaiting()
-})
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
+});
 
-self.addEventListener('activate', function (event) {
-  event.waitUntil(self.clients.claim())
-})
 
 self.addEventListener('message', async function (event) {
   const clientId = event.source.id
