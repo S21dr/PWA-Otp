@@ -1,5 +1,6 @@
 import  {useState, useEffect, FunctionComponent} from "react";
 import {IDBPDatabase, openDB} from "idb";
+import {SHA256} from "crypto-js";
 // Функция для генерации соли (для шифрования)
 function generateSalt() {
     return crypto.getRandomValues(new Uint8Array(16));
@@ -129,7 +130,8 @@ const PinAuth: FunctionComponent<Props> = ({isPinSet,setIsPinSet, handleChangeAu
         if (db) {
             const salt = generateSalt();
             const iv = generateIV()
-            const encrypted = await encryptPin(pinCode, salt,iv);
+            const pin = SHA256(pinCode).toString()
+            const encrypted = await encryptPin(pin, salt,iv);
 
             const tx = db.transaction("pins", "readwrite");
             const store = tx.objectStore("pins");
@@ -166,7 +168,7 @@ const PinAuth: FunctionComponent<Props> = ({isPinSet,setIsPinSet, handleChangeAu
             const decryptedPin = await decryptPin(encryptedPin, new Uint8Array(salt), new Uint8Array(iv));
 
             // Проверка пин-кода
-            if (decryptedPin === pinCode) {
+            if (decryptedPin === SHA256(pinCode).toString()) {
                 console.log("Аутентификация прошла успешно");
                 handleChangeAuth(true)
                 setErrorMessage("");
