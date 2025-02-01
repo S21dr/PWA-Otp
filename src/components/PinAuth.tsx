@@ -4,9 +4,12 @@ import {IDBPDatabase, openDB} from "idb";
 function generateSalt() {
     return crypto.getRandomValues(new Uint8Array(16));
 }
+function generateIV() {
+    return crypto.getRandomValues(new Uint8Array(12));
+}
 
 // Функция для шифрования пин-кода с использованием Web Crypto API
-async function encryptPin(pin:string, salt: Uint8Array) {
+async function encryptPin(pin:string, salt: Uint8Array, iv:Uint8Array) {
     const encoder = new TextEncoder();
     const data = encoder.encode(pin); // Преобразуем пин-код в массив байтов
 
@@ -35,7 +38,7 @@ async function encryptPin(pin:string, salt: Uint8Array) {
 
     // Шифруем пин-код
     const encryptedData = await crypto.subtle.encrypt(
-        {name: "AES-GCM", iv: new Uint8Array(12)}, // Используем случайный IV
+        {name: "AES-GCM", iv: iv}, // Используем случайный IV
         cryptoKey,
         data
     );
@@ -44,7 +47,7 @@ async function encryptPin(pin:string, salt: Uint8Array) {
 }
 
 // Функция для дешифрования пин-кода
-async function decryptPin(encryptedPin:ArrayBuffer, salt: Uint8Array) {
+async function decryptPin(encryptedPin:ArrayBuffer, salt: Uint8Array, iv:Uint8Array) {
     const key = await crypto.subtle.importKey(
         "raw",
         salt,
@@ -68,7 +71,7 @@ async function decryptPin(encryptedPin:ArrayBuffer, salt: Uint8Array) {
 
     // Дешифруем пин-код
     const decryptedData = await crypto.subtle.decrypt(
-        {name: "AES-GCM", iv: new Uint8Array(12)}, // IV должно совпадать с тем, что использовался при шифровании
+        {name: "AES-GCM", iv: iv}, // IV должно совпадать с тем, что использовался при шифровании
         cryptoKey,
         encryptedPin
     );
@@ -121,20 +124,25 @@ const PinAuth: FunctionComponent<Props> = ({isPinSet,setIsPinSet, handleChangeAu
             return;
         }
 
-        const salt = generateSalt();
-        const encrypted = await encryptPin(pinCode, salt);
 
         // Сохраняем зашифрованный пин в IndexedDB
         if (db) {
+            const salt = generateSalt();
+            const iv = generateIV()
+            const encrypted = await encryptPin(pinCode, salt,iv);
+
             const tx = db.transaction("pins", "readwrite");
             const store = tx.objectStore("pins");
-            await store.put({id: "userPin", encryptedPin: encrypted, salt: Array.from(salt)});
+            await store.put({id: "userPin", encryptedPin: encrypted, salt: Array.from(salt), iv: Array.from(iv)});
 
             await tx.done;
+
+            setIsPinSet(true);
+            setErrorMessage("");
+        } else {
+            setErrorMessage("Ошибка ба");
         }
 
-        setIsPinSet(true);
-        setErrorMessage("");
     };
 
 
@@ -153,9 +161,9 @@ const PinAuth: FunctionComponent<Props> = ({isPinSet,setIsPinSet, handleChangeAu
             return;
         }
 
-        const {encryptedPin, salt} = storedPinData;
+        const {encryptedPin, salt, iv} = storedPinData;
         try {
-            const decryptedPin = await decryptPin(encryptedPin, new Uint8Array(salt));
+            const decryptedPin = await decryptPin(encryptedPin, new Uint8Array(salt), new Uint8Array(iv));
 
             // Проверка пин-кода
             if (decryptedPin === pinCode) {
