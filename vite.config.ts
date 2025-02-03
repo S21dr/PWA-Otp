@@ -22,7 +22,11 @@ export default defineConfig({
                 useFlatConfig: true,
             },
         }), // Проверяет TypeScript ошибки в терминале
-        nodePolyfills(),
+        nodePolyfills({
+            globals: {
+                Buffer: true,
+            }
+        }),
     ],
     base: "/PWA-Otp/", // YOUR REPO NAME HERE
 })
