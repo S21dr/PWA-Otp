@@ -48,7 +48,7 @@ const PinCodeSetup: React.FC<{ onComplete: () => void }> = ({onComplete}) => {
                     focus
                     secret
                     type="numeric"
-                    inputMode="number"
+                    inputMode="tel"
                     onComplete={handlePinComplete}
                 />
             </Grid>

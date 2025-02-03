@@ -29,7 +29,7 @@ const PinCodeCheck: React.FC<{ onComplete: () => void, decryptedPin: string }> =
                     focus
                     secret
                     type="numeric"
-                    inputMode="number"
+                    inputMode="tel"
                     onComplete={handlePinComplete}
                     autoSelect={false}
                 />
