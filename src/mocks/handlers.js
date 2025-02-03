@@ -1,6 +1,8 @@
 import {http, HttpResponse} from 'msw'
 import {SHA256, enc} from 'crypto-js';
 
+const  RP_ID = process.env.NODE_ENV === "development" ? "localhost" : "s21dr.github.io"
+
 // Функция для генерации challenge
 const generateChallenge = () => {
     const challenge = new Uint8Array(32);
@@ -16,7 +18,7 @@ export const handlers = [
             challenge: generateChallenge(), // ✅ Теперь challenge в формате ArrayBuffer
             rp: {
                 name: "Example Corp",
-                id: "s21dr.github.io"
+                id:RP_ID
             },
             user: {
                 id: userId, // ✅ ID в формате ArrayBuffer
@@ -39,7 +41,7 @@ export const handlers = [
         return HttpResponse.json({
             challenge: generateChallenge(), // ✅ challenge в формате ArrayBuffer
             timeout: 60000,
-            rpId: "s21dr.github.io",
+            rpId: RP_ID,
             userVerification: "required",
         });
     }),
