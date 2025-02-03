@@ -24,13 +24,18 @@ const BiometricSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
 
     return (
         <Box textAlign="center">
-            <Typography variant="h5">Включить вход по биометрии?</Typography>
-            <Button variant="contained" onClick={handleEnableBiometrics} sx={{ mt: 2 }}>
-                Включить
-            </Button>
-            <Button variant="text" onClick={handleSkip} sx={{ mt: 1 }}>
-                Пропустить
-            </Button>
+            <Typography variant="h5" sx={{ mt: 3 }}>Включить вход по биометрии?</Typography>
+            <div>
+                <Button variant="contained" onClick={handleEnableBiometrics} sx={{ mt: 2 }}>
+                    Включить
+                </Button>
+            </div>
+           <div>
+               <Button variant="text" onClick={handleSkip} sx={{ mt: 1 }}>
+                   Не включить
+               </Button>
+           </div>
+
         </Box>
     );
 };

@@ -50,6 +50,7 @@ const PinCodeSetup: React.FC<{ onComplete: () => void }> = ({onComplete}) => {
                     type="numeric"
                     inputMode="tel"
                     onComplete={handlePinComplete}
+                    autoSelect={false}
                 />
             </Grid>
             {error && <Typography color="error">{error}</Typography>}
