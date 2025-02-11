@@ -10,11 +10,13 @@ import {decryptPin, encryptPin, saveLargeBlob, tryBiometricLogin} from "./utils/
 const App: React.FC = () => {
     const [step, setStep] = useState<number>(0);
     const [loadApp, setLoadApp] = useState(true)
+    const [loadLogin, setLoadLogin] = useState(false)
 
     //const [decryptedPin, setDecryptedPin] = useState("")
 
     const logInBio = async () => {
         try {
+            setLoadLogin(true)
             const biometricEnabled = await getBiometricSetting();
             if (!biometricEnabled) {
                 const largeBlob = await saveLargeBlob()
@@ -43,8 +45,8 @@ const App: React.FC = () => {
                     setStep(2)
                 }
             }
+            setLoadLogin(false)
         } catch (e) {
-            setStep(2)
             alert(e)
         }
 
@@ -84,7 +86,7 @@ const App: React.FC = () => {
                     {step === 2 && <Box textAlign="center">
                         <Typography variant="h5" sx={{mt: 3}}>Вход по биометрии</Typography>
                         <div>
-                            <Button variant="contained" onClick={logInBio} sx={{mt: 2}}>
+                            <Button variant="contained" onClick={logInBio} disabled={loadLogin} loading={loadLogin} sx={{mt: 2}}>
                                 Войти
                             </Button>
                         </div>

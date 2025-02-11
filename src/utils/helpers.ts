@@ -261,9 +261,8 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
                     const decodedData = JSON.parse(new TextDecoder().decode(blob));
                     const salt = new Uint8Array(decodedData.salt);
                     const iv = new Uint8Array(decodedData.iv);
-
-                    console.log("Извлеченная соль:", salt);
-                    console.log("Извлеченный IV:", iv);
+                    alert(`Извлеченная соль: ${JSON.stringify(salt)}`);
+                    alert(`Извлеченный IV: ${JSON.stringify(iv)}`);
 
                     return {salt, iv};
                 } else {
