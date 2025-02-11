@@ -119,7 +119,7 @@ export async function registerBiometric(): Promise<{ salt: Uint8Array, iv: Uint8
                 extensions: {
                     largeBlob: {
                         support: "required",
-                        blob: blobData // Сохраняем blobData в largeBlob
+                        write: blobData // Сохраняем blobData в largeBlob
                     }
                 }
             },
