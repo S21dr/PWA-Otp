@@ -11,10 +11,10 @@ const App: React.FC = () => {
     const [step, setStep] = useState<number>(0);
     const [loadApp, setLoadApp] = useState(true)
 
-    const [biometricEnabled, setBiometricEnabled] = useState(false)
     //const [decryptedPin, setDecryptedPin] = useState("")
 
     const logInBio = async () => {
+        const biometricEnabled = await getBiometricSetting();
         if (!biometricEnabled){
             const largeBlob = await saveLargeBlob()
             if (largeBlob) {
@@ -47,7 +47,6 @@ const App: React.FC = () => {
         const init = async () => {
             //const pin = await getStoredPin();
             const biometricEnabled = await getBiometricSetting();
-            setBiometricEnabled(!!biometricEnabled)
             if (biometricEnabled === undefined) {
                 setStep(1)
             }
