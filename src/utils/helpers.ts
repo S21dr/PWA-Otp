@@ -119,11 +119,19 @@ export async function registerBiometric(): Promise<{ salt: Uint8Array, iv: Uint8
                 extensions: {
                     largeBlob: {
                         support: "required",
-                        write: blobData // Сохраняем blobData в largeBlob
                     }
                 }
             },
         })) as PublicKeyCredential;
+
+        await navigator.credentials.get({
+            publicKey: {
+                ...publicKey,
+                extensions: {
+                    largeBlob: {write: blobData} // Запрашиваем данные из largeBlob
+                }
+            },
+        }) as PublicKeyCredential;
 
         if (!credential) {
             console.error("Ошибка при создании ключа");
