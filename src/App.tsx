@@ -14,31 +14,37 @@ const App: React.FC = () => {
     //const [decryptedPin, setDecryptedPin] = useState("")
 
     const logInBio = async () => {
-        const biometricEnabled = await getBiometricSetting();
-        if (!biometricEnabled){
-            const largeBlob = await saveLargeBlob()
-            if (largeBlob) {
-                const pin = "someSecretString"
-                const encrypted = await encryptPin(pin, largeBlob.salt, largeBlob.iv);
-                savePinToDB({
-                    encryptedPin: encrypted,
-                });
-                saveBiometricSetting(true);
-                setStep(3);
-            }
-        } else {
-            const biometricSuccess = await tryBiometricLogin();
-            try {
-                alert(`biometricSuccess: ${biometricSuccess}`);
-                if (biometricSuccess) {
-                    const {encryptedPin} = await getStoredPin();
-                    const decrypt = await decryptPin({encryptedPin, salt: biometricSuccess.salt, iv: biometricSuccess.iv})
-                    alert(`decrypt:${decrypt}` )
+        try {
+            const biometricEnabled = await getBiometricSetting();
+            if (!biometricEnabled) {
+                const largeBlob = await saveLargeBlob()
+                if (largeBlob) {
+                    const pin = "someSecretString"
+                    const encrypted = await encryptPin(pin, largeBlob.salt, largeBlob.iv);
+                    savePinToDB({
+                        encryptedPin: encrypted,
+                    });
+                    saveBiometricSetting(true);
                     setStep(3);
                 }
-            } catch (e) {
-                alert(e)
+            } else {
+                const biometricSuccess = await tryBiometricLogin();
+
+                if (biometricSuccess) {
+                    const {encryptedPin} = await getStoredPin();
+                    const decrypt = await decryptPin({
+                        encryptedPin,
+                        salt: biometricSuccess.salt,
+                        iv: biometricSuccess.iv
+                    })
+                    alert(`decrypt:${decrypt}`)
+                    setStep(3);
+                }
+
             }
+        } catch (e) {
+            setStep(2)
+            alert(e)
         }
 
     }
