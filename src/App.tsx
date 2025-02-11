@@ -15,40 +15,37 @@ const App: React.FC = () => {
     //const [decryptedPin, setDecryptedPin] = useState("")
 
     const logInBio = async () => {
-        try {
-            setLoadLogin(true)
-            const biometricEnabled = await getBiometricSetting();
-            if (!biometricEnabled) {
-                const largeBlob = await saveLargeBlob()
-                if (largeBlob) {
-                    const pin = "someSecretString"
-                    const encrypted = await encryptPin(pin, largeBlob.salt, largeBlob.iv);
-                    savePinToDB({
-                        encryptedPin: encrypted,
-                    });
-                    saveBiometricSetting(true);
-                    setStep(3);
-                }
-            } else {
-                const biometricSuccess = await tryBiometricLogin();
 
-                if (biometricSuccess) {
-                    const {encryptedPin} = await getStoredPin();
-                    const decrypt = await decryptPin({
-                        encryptedPin,
-                        salt: biometricSuccess.salt,
-                        iv: biometricSuccess.iv
-                    })
-                    alert(`decrypt:${decrypt}`)
-                    setStep(3);
-                } else {
-                    setStep(2)
-                }
+        setLoadLogin(true)
+        const biometricEnabled = await getBiometricSetting();
+        if (!biometricEnabled) {
+            const largeBlob = await saveLargeBlob()
+            if (largeBlob) {
+                const pin = "someSecretString"
+                const encrypted = await encryptPin(pin, largeBlob.salt, largeBlob.iv);
+                savePinToDB({
+                    encryptedPin: encrypted,
+                });
+                saveBiometricSetting(true);
+                setStep(3);
             }
-            setLoadLogin(false)
-        } catch (e) {
-            alert(e)
+        } else {
+            const biometricSuccess = await tryBiometricLogin();
+
+            if (biometricSuccess) {
+                const {encryptedPin} = await getStoredPin();
+                const decrypt = await decryptPin({
+                    encryptedPin,
+                    salt: biometricSuccess.salt,
+                    iv: biometricSuccess.iv
+                })
+                alert(`decrypt:${decrypt}`)
+                setStep(3);
+            } else {
+                setStep(2)
+            }
         }
+        setLoadLogin(false)
 
     }
 
@@ -86,7 +83,8 @@ const App: React.FC = () => {
                     {step === 2 && <Box textAlign="center">
                         <Typography variant="h5" sx={{mt: 3}}>Вход по биометрии</Typography>
                         <div>
-                            <Button variant="contained" onClick={logInBio} disabled={loadLogin} loading={loadLogin} sx={{mt: 2}}>
+                            <Button variant="contained" onClick={logInBio} disabled={loadLogin} loading={loadLogin}
+                                    sx={{mt: 2}}>
                                 Войти
                             </Button>
                         </div>
