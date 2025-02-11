@@ -39,8 +39,9 @@ const App: React.FC = () => {
                     })
                     alert(`decrypt:${decrypt}`)
                     setStep(3);
+                } else {
+                    setStep(2)
                 }
-
             }
         } catch (e) {
             setStep(2)
