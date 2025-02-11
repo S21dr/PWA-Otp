@@ -214,15 +214,15 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
 
                     return {salt, iv};
                 } else {
-                    alert(`largeBlob not exist: ${extensionResults}`)
+                    alert(`largeBlob not exist: ${JSON.stringify(extensionResults)}`)
                 }
             } else {
-                alert(`getClientExtensionResults not exist: ${credential}`)
+                alert(`getClientExtensionResults not exist: ${JSON.stringify(credential)}`)
             }
         }
         return null
     } catch (error) {
-        alert(`Ошибка при входе:${error}`,);
+        alert(`Ошибка при входе:${ JSON.stringify(error)}`,);
         return null
     }
 }
