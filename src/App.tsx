@@ -15,12 +15,18 @@ const App: React.FC = () => {
     //const [decryptedPin, setDecryptedPin] = useState("")
     const logInBio = async () => {
         const biometricSuccess = await tryBiometricLogin();
-        if (biometricSuccess) {
-            const {encryptedPin} = await getStoredPin();
-            const decrypt = await decryptPin({encryptedPin, salt: biometricSuccess.salt, iv: biometricSuccess.iv})
-            alert(`decrypt:${decrypt}` )
-            setStep(3);
+        try {
+            alert(`biometricSuccess: ${biometricSuccess}`);
+            if (biometricSuccess) {
+                const {encryptedPin} = await getStoredPin();
+                const decrypt = await decryptPin({encryptedPin, salt: biometricSuccess.salt, iv: biometricSuccess.iv})
+                alert(`decrypt:${decrypt}` )
+                setStep(3);
+            }
+        } catch (e) {
+            alert(e)
         }
+
     }
 
     useEffect(() => {

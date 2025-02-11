@@ -88,7 +88,7 @@ export async function decryptPin({encryptedPin, salt, iv}: IPinRow) {
 
 // Функция для регистрации биометрии
 
-export async function registerBiometric(): Promise<{ salt:Uint8Array, iv:Uint8Array } | null> {
+export async function registerBiometric(): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
     if (!window.PublicKeyCredential) return null;
     try {
         const response = await fetch("/api/register-challenge", {
@@ -144,10 +144,10 @@ export async function registerBiometric(): Promise<{ salt:Uint8Array, iv:Uint8Ar
             }),
         });
         const registration = await regResp.json();
-         if(registration?.success){
-              return {salt, iv};
-         }
-         return null;
+        if (registration?.success) {
+            return {salt, iv};
+        }
+        return null;
 
 
     } catch (error) {
@@ -158,7 +158,7 @@ export async function registerBiometric(): Promise<{ salt:Uint8Array, iv:Uint8Ar
 }
 
 // Функция для аутентификации по биометрии
-export async function tryBiometricLogin(): Promise<{ salt:Uint8Array, iv:Uint8Array } | null> {
+export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
     if (!window.PublicKeyCredential) return null;
     try {
         const response = await fetch("/api/login-challenge", {
@@ -200,7 +200,7 @@ export async function tryBiometricLogin(): Promise<{ salt:Uint8Array, iv:Uint8Ar
         const result = await loginResponse.json();
 
 
-        if (result?.success){
+        if (result?.success) {
             if (credential && "getClientExtensionResults" in credential) {
                 const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
                 if (extensionResults.largeBlob) {
@@ -212,13 +212,17 @@ export async function tryBiometricLogin(): Promise<{ salt:Uint8Array, iv:Uint8Ar
                     console.log("Извлеченная соль:", salt);
                     console.log("Извлеченный IV:", iv);
 
-                    return { salt, iv };
+                    return {salt, iv};
+                } else {
+                    alert(`largeBlob not exist: ${extensionResults}`)
                 }
+            } else {
+                alert(`getClientExtensionResults not exist: ${credential}`)
             }
         }
         return null
     } catch (error) {
-        console.error("Ошибка при входе:", error);
+        alert(`Ошибка при входе:${error}`,);
         return null
     }
 }
