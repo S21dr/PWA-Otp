@@ -1,99 +1,8 @@
 import {IPinRow} from "./db.ts";
 
-// Функция для регистрации биометрии
-
-export async function registerBiometric(): Promise<boolean> {
-    if (!window.PublicKeyCredential) return false;
-    try {
-        const response = await fetch("/api/register-challenge", {
-            method: "POST",
-        });
-        const res = await response.json();
-        const {publicKey} = res
-
-        // Преобразуем challenge из ArrayBuffer в Uint8Array
-        publicKey.challenge = new Uint8Array(publicKey.challenge).buffer;
-
-        // Преобразуем user.id из ArrayBuffer в Uint8Array
-        publicKey.user.id = new Uint8Array(2);
-
-
-        const credential = (await navigator.credentials.create({
-            publicKey,
-        })) as PublicKeyCredential;
-
-        if (!credential) {
-            console.error("Ошибка при создании ключа");
-            return false
-        }
-
-        const regResp = await fetch("/api/register", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                id: credential.id,
-                rawId: Array.from(new Uint8Array(credential.rawId)),
-                response: {
-                    attestationObject: Array.from(new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject)),
-                    clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-                },
-                type: credential.type,
-            }),
-        });
-        const registration = await regResp.json();
-        return !!registration?.success
-
-
-    } catch (error) {
-        console.error("Ошибка при регистрации:", error);
-        return false
-        //alert(`❌ Ошибка при регистрации ${error?.toString()}`);
-    }
+interface ExtendedAuthenticationExtensionsClientOutputs extends AuthenticationExtensionsClientOutputs {
+    largeBlob?: { blob: ArrayBuffer };
 }
-
-// Функция для аутентификации по биометрии
-export async function tryBiometricLogin(): Promise<boolean> {
-    if (!window.PublicKeyCredential) return false;
-    try {
-        const response = await fetch("/api/login-challenge", {
-            method: "POST",
-        });
-        const publicKey = await response.json();
-        // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
-        publicKey.challenge = new Uint8Array(publicKey?.challenge).buffer;
-
-        const credential = (await navigator.credentials.get({
-            publicKey,
-        })) as PublicKeyCredential;
-
-        if (!credential) {
-            console.error("Ошибка аутентификации,  не получилось получить credential");
-            return false
-        }
-
-        const loginResponse = await fetch("/api/login", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                id: credential.id,
-                rawId: Array.from(new Uint8Array(credential.rawId)),
-                response: {
-                    authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
-                    clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-                    signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature)),
-                },
-                type: credential.type,
-            }),
-        });
-
-        const result = await loginResponse.json();
-        return !!result?.success
-    } catch (error) {
-        console.error("Ошибка при входе:", error);
-        return false
-    }
-}
-
 
 // Функция для генерации соли (для шифрования)
 export function generateSalt() {
@@ -144,7 +53,7 @@ export async function encryptPin(pin: string, salt: Uint8Array, iv: Uint8Array) 
 }
 
 // Функция для дешифрования пин-кода
-export async function decryptPin({encryptedPin, salt, iv}:IPinRow) {
+export async function decryptPin({encryptedPin, salt, iv}: IPinRow) {
     const key = await crypto.subtle.importKey(
         "raw",
         salt,
@@ -175,4 +84,141 @@ export async function decryptPin({encryptedPin, salt, iv}:IPinRow) {
 
     const decoder = new TextDecoder();
     return decoder.decode(decryptedData);
+}
+
+// Функция для регистрации биометрии
+
+export async function registerBiometric(): Promise<{ salt:Uint8Array, iv:Uint8Array } | null> {
+    if (!window.PublicKeyCredential) return null;
+    try {
+        const response = await fetch("/api/register-challenge", {
+            method: "POST",
+        });
+        const res = await response.json();
+        const {publicKey} = res
+
+        // Преобразуем challenge из ArrayBuffer в Uint8Array
+        publicKey.challenge = new Uint8Array(publicKey.challenge).buffer;
+
+        // Преобразуем user.id из ArrayBuffer в Uint8Array
+        publicKey.user.id = new Uint8Array(2);
+
+        const salt = generateSalt()
+        const iv = generateIV()
+
+        // Кодируем соль и IV в объект в JSON и затем в ArrayBuffer
+        const blobData = new TextEncoder().encode(JSON.stringify({
+            salt: Array.from(salt),
+            iv: Array.from(iv)
+        }));
+
+        const credential = (await navigator.credentials.create({
+            publicKey: {
+                ...publicKey,
+                // **Используем largeBlob для хранения соли**
+                extensions: {
+                    largeBlob: {
+                        support: "required",
+                        blob: blobData // Сохраняем blobData в largeBlob
+                    }
+                }
+            },
+        })) as PublicKeyCredential;
+
+        if (!credential) {
+            console.error("Ошибка при создании ключа");
+            return null
+        }
+
+        const regResp = await fetch("/api/register", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                id: credential.id,
+                rawId: Array.from(new Uint8Array(credential.rawId)),
+                response: {
+                    attestationObject: Array.from(new Uint8Array((credential.response as AuthenticatorAttestationResponse).attestationObject)),
+                    clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
+                },
+                type: credential.type,
+            }),
+        });
+        const registration = await regResp.json();
+         if(registration?.success){
+              return {salt, iv};
+         }
+         return null;
+
+
+    } catch (error) {
+        console.error("Ошибка при регистрации:", error);
+        return null
+        //alert(`❌ Ошибка при регистрации ${error?.toString()}`);
+    }
+}
+
+// Функция для аутентификации по биометрии
+export async function tryBiometricLogin(): Promise<{ salt:Uint8Array, iv:Uint8Array } | null> {
+    if (!window.PublicKeyCredential) return null;
+    try {
+        const response = await fetch("/api/login-challenge", {
+            method: "POST",
+        });
+        const publicKey = await response.json();
+        // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
+        publicKey.challenge = new Uint8Array(publicKey?.challenge).buffer;
+
+        const credential = (await navigator.credentials.get({
+            publicKey: {
+                ...publicKey,
+                extensions: {
+                    largeBlob: {read: true} // Запрашиваем данные из largeBlob
+                }
+            },
+        })) as PublicKeyCredential;
+
+        if (!credential) {
+            console.error("Ошибка аутентификации,  не получилось получить credential");
+            return null
+        }
+
+        const loginResponse = await fetch("/api/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                id: credential.id,
+                rawId: Array.from(new Uint8Array(credential.rawId)),
+                response: {
+                    authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
+                    clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
+                    signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature)),
+                },
+                type: credential.type,
+            }),
+        });
+
+        const result = await loginResponse.json();
+
+
+        if (result?.success){
+            if (credential && "getClientExtensionResults" in credential) {
+                const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
+                if (extensionResults.largeBlob) {
+                    const blob = extensionResults.largeBlob.blob;
+                    const decodedData = JSON.parse(new TextDecoder().decode(blob));
+                    const salt = new Uint8Array(decodedData.salt);
+                    const iv = new Uint8Array(decodedData.iv);
+
+                    console.log("Извлеченная соль:", salt);
+                    console.log("Извлеченный IV:", iv);
+
+                    return { salt, iv };
+                }
+            }
+        }
+        return null
+    } catch (error) {
+        console.error("Ошибка при входе:", error);
+        return null
+    }
 }

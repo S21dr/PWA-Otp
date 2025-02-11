@@ -24,8 +24,7 @@ const PinCodeSetup: React.FC<{ onComplete: () => void }> = ({onComplete}) => {
                 const pin = SHA256(value).toString()
                 const encrypted = await encryptPin(pin, salt, iv);
                 savePinToDB({
-                    salt,
-                    iv,
+
                     encryptedPin: encrypted,
                 });
                 onComplete();

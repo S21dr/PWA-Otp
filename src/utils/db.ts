@@ -18,14 +18,14 @@ async function getDB() {
     });
 }
 
-export async function savePinToDB(pinRow: IPinRow) {
+export async function savePinToDB(pinRow: {encryptedPin: ArrayBuffer}) {
     const db = await getDB();
     await db.put(STORE_NAME, pinRow, "pin");
 }
 
 export async function getStoredPin() {
     const db = await getDB();
-    return db.get(STORE_NAME, "pin") as Promise<IPinRow>;
+    return db.get(STORE_NAME, "pin") as Promise<{encryptedPin: ArrayBuffer}>;
 }
 
 export async function saveBiometricSetting(enabled: boolean) {

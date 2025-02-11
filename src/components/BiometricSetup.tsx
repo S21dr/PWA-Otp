@@ -1,12 +1,17 @@
 import { Box, Button, Typography } from "@mui/material";
-import { saveBiometricSetting } from "../utils/db";
-import {registerBiometric} from "../utils/helpers.ts";
+import {saveBiometricSetting, savePinToDB} from "../utils/db";
+import {encryptPin, registerBiometric} from "../utils/helpers.ts";
 
 const BiometricSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
     const handleEnableBiometrics = async () => {
         try {
             const success = await registerBiometric();
             if (success) {
+                const pin = "someSecretString"
+                const encrypted = await encryptPin(pin, success.salt, success.iv);
+                savePinToDB({
+                    encryptedPin: encrypted,
+                });
                 saveBiometricSetting(true);
                 onComplete();
             } else {
@@ -17,10 +22,6 @@ const BiometricSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
         }
     };
 
-    const handleSkip = () => {
-        saveBiometricSetting(false);
-        onComplete();
-    };
 
     return (
         <Box textAlign="center">
@@ -30,12 +31,6 @@ const BiometricSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
                     Включить
                 </Button>
             </div>
-           <div>
-               <Button variant="text" onClick={handleSkip} sx={{ mt: 1 }}>
-                   Не включить
-               </Button>
-           </div>
-
         </Box>
     );
 };
