@@ -3,28 +3,42 @@ import {Box, Button, Container, Typography} from "@mui/material";
 //import PinCodeSetup from "./components/PinCodeSetup";
 import BiometricSetup from "./components/BiometricSetup";
 import OTPDisplay from "./components/OTPDisplay";
-import {getBiometricSetting, getStoredPin} from "./utils/db";
-import {decryptPin, tryBiometricLogin} from "./utils/helpers.ts";
+import {getBiometricSetting, getStoredPin, saveBiometricSetting, savePinToDB} from "./utils/db";
+import {decryptPin, encryptPin, saveLargeBlob, tryBiometricLogin} from "./utils/helpers.ts";
 //import PinCodeCheck from "./components/PinCodeCheck.tsx";
 
 const App: React.FC = () => {
     const [step, setStep] = useState<number>(0);
     const [loadApp, setLoadApp] = useState(true)
 
-    const [biometricEnabled, setBiometricEnabled] = useState()
+    const [biometricEnabled, setBiometricEnabled] = useState(false)
     //const [decryptedPin, setDecryptedPin] = useState("")
+
     const logInBio = async () => {
-        const biometricSuccess = await tryBiometricLogin();
-        try {
-            alert(`biometricSuccess: ${biometricSuccess}`);
-            if (biometricSuccess) {
-                const {encryptedPin} = await getStoredPin();
-                const decrypt = await decryptPin({encryptedPin, salt: biometricSuccess.salt, iv: biometricSuccess.iv})
-                alert(`decrypt:${decrypt}` )
+        if (!biometricEnabled){
+            const largeBlob = await saveLargeBlob()
+            if (largeBlob) {
+                const pin = "someSecretString"
+                const encrypted = await encryptPin(pin, largeBlob.salt, largeBlob.iv);
+                savePinToDB({
+                    encryptedPin: encrypted,
+                });
+                saveBiometricSetting(true);
                 setStep(3);
             }
-        } catch (e) {
-            alert(e)
+        } else {
+            const biometricSuccess = await tryBiometricLogin();
+            try {
+                alert(`biometricSuccess: ${biometricSuccess}`);
+                if (biometricSuccess) {
+                    const {encryptedPin} = await getStoredPin();
+                    const decrypt = await decryptPin({encryptedPin, salt: biometricSuccess.salt, iv: biometricSuccess.iv})
+                    alert(`decrypt:${decrypt}` )
+                    setStep(3);
+                }
+            } catch (e) {
+                alert(e)
+            }
         }
 
     }
@@ -33,15 +47,12 @@ const App: React.FC = () => {
         const init = async () => {
             //const pin = await getStoredPin();
             const biometricEnabled = await getBiometricSetting();
+            setBiometricEnabled(!!biometricEnabled)
             if (biometricEnabled === undefined) {
                 setStep(1)
             }
             if (biometricEnabled) {
-                setBiometricEnabled(biometricEnabled)
-                const biometricSuccess = await tryBiometricLogin();
-                if (biometricSuccess) {
-                    setStep(3);
-                }
+                await logInBio()
             }
             // if (pin?.encryptedPin) {
             //     const decrypt = await decryptPin(pin)
@@ -63,7 +74,8 @@ const App: React.FC = () => {
                     Load app ...
                 </Typography>
                 : <Box mt={5}>
-                    {biometricEnabled && <Box textAlign="center">
+                    {step === 1 && <BiometricSetup onComplete={() => setStep(2)}/>}
+                    {step === 2 && <Box textAlign="center">
                         <Typography variant="h5" sx={{mt: 3}}>Вход по биометрии</Typography>
                         <div>
                             <Button variant="contained" onClick={logInBio} sx={{mt: 2}}>
@@ -72,7 +84,6 @@ const App: React.FC = () => {
                         </div>
                     </Box>}
                     {/*{step === 0 && <PinCodeCheck onComplete={() => setStep(3)} decryptedPin={decryptedPin}/>}*/}
-                    {step === 1 && <BiometricSetup onComplete={() => setStep(3)}/>}
                     {/*{step === 2 && <PinCodeSetup onComplete={() => setStep(3)}/>}*/}
                     {step === 3 && <OTPDisplay/>}
                 </Box>}

@@ -88,8 +88,8 @@ export async function decryptPin({encryptedPin, salt, iv}: IPinRow) {
 
 // Функция для регистрации биометрии
 
-export async function registerBiometric(): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
-    if (!window.PublicKeyCredential) return null;
+export async function registerBiometric(): Promise<boolean> {
+    if (!window.PublicKeyCredential) return false;
     try {
         const response = await fetch("/api/register-challenge", {
             method: "POST",
@@ -103,14 +103,7 @@ export async function registerBiometric(): Promise<{ salt: Uint8Array, iv: Uint8
         // Преобразуем user.id из ArrayBuffer в Uint8Array
         publicKey.user.id = new Uint8Array(2);
 
-        const salt = generateSalt()
-        const iv = generateIV()
 
-        // Кодируем соль и IV в объект в JSON и затем в ArrayBuffer
-        const blobData = new TextEncoder().encode(JSON.stringify({
-            salt: Array.from(salt),
-            iv: Array.from(iv)
-        }));
 
         const credential = (await navigator.credentials.create({
             publicKey: {
@@ -124,18 +117,10 @@ export async function registerBiometric(): Promise<{ salt: Uint8Array, iv: Uint8
             },
         })) as PublicKeyCredential;
 
-        await navigator.credentials.get({
-            publicKey: {
-                ...publicKey,
-                extensions: {
-                    largeBlob: {write: blobData} // Запрашиваем данные из largeBlob
-                }
-            },
-        }) as PublicKeyCredential;
 
         if (!credential) {
             console.error("Ошибка при создании ключа");
-            return null
+            return false
         }
 
         const regResp = await fetch("/api/register", {
@@ -152,18 +137,78 @@ export async function registerBiometric(): Promise<{ salt: Uint8Array, iv: Uint8
             }),
         });
         const registration = await regResp.json();
-        if (registration?.success) {
-            return {salt, iv};
-        }
-        return null;
 
+        return !!registration?.success;
 
     } catch (error) {
         console.error("Ошибка при регистрации:", error);
-        return null
+        return false
         //alert(`❌ Ошибка при регистрации ${error?.toString()}`);
     }
 }
+
+//
+export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
+    if (!window.PublicKeyCredential) return null;
+    try {
+        const response = await fetch("/api/login-challenge", {
+            method: "POST",
+        });
+        const publicKey = await response.json();
+        // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
+        publicKey.challenge = new Uint8Array(publicKey?.challenge).buffer;
+
+        const salt = generateSalt()
+        const iv = generateIV()
+
+        // Кодируем соль и IV в объект в JSON и затем в ArrayBuffer
+        const blobData = new TextEncoder().encode(JSON.stringify({
+            salt: Array.from(salt),
+            iv: Array.from(iv)
+        }));
+
+        const credential =  await navigator.credentials.get({
+            publicKey: {
+                ...publicKey,
+                extensions: {
+                    largeBlob: {write: blobData} // Запрашиваем данные из largeBlob
+                }
+            },
+        }) as PublicKeyCredential;
+
+        if (!credential) {
+            console.error("Ошибка аутентификации,  не получилось получить credential");
+            return null
+        }
+
+        const loginResponse = await fetch("/api/login", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({
+                id: credential.id,
+                rawId: Array.from(new Uint8Array(credential.rawId)),
+                response: {
+                    authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
+                    clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
+                    signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature)),
+                },
+                type: credential.type,
+            }),
+        });
+
+        const result = await loginResponse.json();
+
+
+        if (result?.success) {
+            return {salt, iv};
+        }
+        return null
+    } catch (error) {
+        alert(`Ошибка при созранении largeBlob:${ JSON.stringify(error)}`,);
+        return null
+    }
+}
+
 
 // Функция для аутентификации по биометрии
 export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
