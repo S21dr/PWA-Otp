@@ -1,4 +1,4 @@
-import {useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import {Box, Typography, Button} from "@mui/material";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
@@ -13,7 +13,7 @@ const OTPDisplay: React.FC = () => {
     const salt = store.getState().idb.salt;
     const iv = store.getState().idb.iv;
 
-    const onMount = async () => {
+    const onMount = useCallback(async () => {
         setLoadOtp(true)
         const secret = await fetchSeed()
         const otp = authenticator.generate(secret)
@@ -24,11 +24,11 @@ const OTPDisplay: React.FC = () => {
         }
         setOtp(otp);
         setLoadOtp(false)
-    }
+    }, [iv, salt])
 
     useEffect(() => {
         onMount()
-    }, []);
+    }, [onMount]);
 
     return (
         <Box textAlign="center">
