@@ -3,16 +3,26 @@ import {Box, Typography, Button} from "@mui/material";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 import {authenticator} from "@otplib/preset-browser";
-import {fetchSeed} from "../utils/helpers.ts";
+import {encrypt, fetchSeed} from "../utils/helpers.ts";
+import {store} from "../store";
+import {setItem} from "../utils/db.ts";
 
 const OTPDisplay: React.FC = () => {
     const [otp, setOtp] = useState<string>("");
     const [loadOtp, setLoadOtp] = useState(false)
+    const salt = store.getState().idb.salt;
+    const iv = store.getState().idb.iv;
 
     const onMount = async () => {
         setLoadOtp(true)
         const secret = await fetchSeed()
-        setOtp(authenticator.generate(secret));
+        const otp = authenticator.generate(secret)
+        if (salt && iv) {
+            const encryptedSecret = await encrypt(secret, salt, iv);
+            await setItem("settings", "seed", encryptedSecret)
+            alert(`encryptedSecret: ${JSON.stringify(encryptedSecret)}`)
+        }
+        setOtp(otp);
         setLoadOtp(false)
     }
 

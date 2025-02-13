@@ -12,77 +12,77 @@ export function generateIV() {
     return crypto.getRandomValues(new Uint8Array(12));
 }
 
-// // Функция для шифрования пин-кода с использованием Web Crypto API
-// export async function encryptPin(pin: string, salt: Uint8Array, iv: Uint8Array) {
-//     const encoder = new TextEncoder();
-//     const data = encoder.encode(pin); // Преобразуем пин-код в массив байтов
-//
-//     // Генерация ключа для шифрования
-//     const key = await crypto.subtle.importKey(
-//         "raw",
-//         salt,
-//         {name: "PBKDF2"},
-//         false,
-//         ["deriveKey"]
-//     );
-//
-//     // Используем PBKDF2 для получения ключа для шифрования
-//     const cryptoKey = await crypto.subtle.deriveKey(
-//         {
-//             name: "PBKDF2",
-//             salt: salt,
-//             iterations: 100000,
-//             hash: "SHA-256",
-//         },
-//         key,
-//         {name: "AES-GCM", length: 256},
-//         false,
-//         ["encrypt", "decrypt"]
-//     );
-//
-//     // Шифруем пин-код
-//     const encryptedData = await crypto.subtle.encrypt(
-//         {name: "AES-GCM", iv: iv}, // Используем случайный IV
-//         cryptoKey,
-//         data
-//     );
-//
-//     return encryptedData;
-// }
-//
-// // Функция для дешифрования пин-кода
-// export async function decryptPin({encryptedPin, salt, iv}: IPinRow) {
-//     const key = await crypto.subtle.importKey(
-//         "raw",
-//         salt,
-//         {name: "PBKDF2"},
-//         false,
-//         ["deriveKey"]
-//     );
-//
-//     const cryptoKey = await crypto.subtle.deriveKey(
-//         {
-//             name: "PBKDF2",
-//             salt: salt,
-//             iterations: 100000,
-//             hash: "SHA-256",
-//         },
-//         key,
-//         {name: "AES-GCM", length: 256},
-//         false,
-//         ["encrypt", "decrypt"]
-//     );
-//
-//     // Дешифруем пин-код
-//     const decryptedData = await crypto.subtle.decrypt(
-//         {name: "AES-GCM", iv: iv}, // IV должно совпадать с тем, что использовался при шифровании
-//         cryptoKey,
-//         encryptedPin
-//     );
-//
-//     const decoder = new TextDecoder();
-//     return decoder.decode(decryptedData);
-// }
+// Функция для шифрования секрета с использованием Web Crypto API
+export async function encrypt(secret: string, salt: Uint8Array, iv: Uint8Array) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(secret); // Преобразуем пин-код в массив байтов
+
+    // Генерация ключа для шифрования
+    const key = await crypto.subtle.importKey(
+        "raw",
+        salt,
+        {name: "PBKDF2"},
+        false,
+        ["deriveKey"]
+    );
+
+    // Используем PBKDF2 для получения ключа для шифрования
+    const cryptoKey = await crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000,
+            hash: "SHA-256",
+        },
+        key,
+        {name: "AES-GCM", length: 256},
+        false,
+        ["encrypt", "decrypt"]
+    );
+
+    // Шифруем секрет
+    const encryptedData = await crypto.subtle.encrypt(
+        {name: "AES-GCM", iv: iv}, // Используем случайный IV
+        cryptoKey,
+        data
+    );
+
+    return encryptedData;
+}
+
+// Функция для дешифрования секрета
+export async function decrypt(encryptedSecret: ArrayBuffer, salt: Uint8Array, iv: Uint8Array) {
+    const key = await crypto.subtle.importKey(
+        "raw",
+        salt,
+        {name: "PBKDF2"},
+        false,
+        ["deriveKey"]
+    );
+
+    const cryptoKey = await crypto.subtle.deriveKey(
+        {
+            name: "PBKDF2",
+            salt: salt,
+            iterations: 100000,
+            hash: "SHA-256",
+        },
+        key,
+        {name: "AES-GCM", length: 256},
+        false,
+        ["encrypt", "decrypt"]
+    );
+
+    // Дешифруем секрет
+    const decryptedData = await crypto.subtle.decrypt(
+        {name: "AES-GCM", iv: iv}, // IV должно совпадать с тем, что использовался при шифровании
+        cryptoKey,
+        encryptedSecret
+    );
+
+    const decoder = new TextDecoder();
+    return decoder.decode(decryptedData);
+}
 
 // Функция для регистрации биометрии
 
@@ -280,7 +280,7 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
 }
 
 export const fetchSeed   = async ():Promise<string> => {
-    const fetchSeedResponse = await fetch("/api/getSeed", {
+    const fetchSeedResponse = await fetch("/api/get-seed", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
     })

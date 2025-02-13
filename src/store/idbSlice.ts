@@ -5,7 +5,7 @@ import {AppDB} from "./idb.ts";
 interface IDBState {
     db: IDBPDatabase<AppDB> | null;
     rawId: number[];
-    seed: string;
+    seed:  ArrayBuffer | null;
     salt: Uint8Array | null;
     iv: Uint8Array | null;
 }
@@ -13,7 +13,7 @@ interface IDBState {
 const initialState: IDBState = {
     db: null,
     rawId: [],
-    seed: "",
+    seed: null,
     salt: null,
     iv: null,
 };
@@ -28,7 +28,7 @@ const idbSlice = createSlice({
         setRawId: (state, action: PayloadAction<number[]>) => {
             state.rawId = action.payload;
         },
-        setSeed: (state, action: PayloadAction<string>) => {
+        setSeed: (state, action: PayloadAction<ArrayBuffer>) => {
             state.seed = action.payload;
         },
         setSalt: (state, action: PayloadAction<Uint8Array>) => {

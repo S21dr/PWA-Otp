@@ -56,7 +56,7 @@ export const handlers = [
     }),
 
     // Генерация seed
-    http.get("/api/getSeed", async () => {
+    http.post("/api/get-seed", async () => {
         const seed = "KVKFKRCPNZQUYMLXOVYDSQKJKZDTSRLD";
         return HttpResponse.json({seed});
     }),

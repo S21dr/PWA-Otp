@@ -16,7 +16,7 @@ const LoadApp = ({children}: { children: React.ReactNode }) => {
         }
         const seed = await db.get("settings","seed")
         if (seed) {
-            dispatch(setSeed(seed as string))
+            dispatch(setSeed(seed as ArrayBuffer))
         }
         setLoadApp(false);
     },[dispatch])
