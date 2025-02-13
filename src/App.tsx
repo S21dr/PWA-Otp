@@ -9,7 +9,6 @@ const App: FC = () => {
     const [step, setStep] = useState<number>(1);
     const rawId = (store.getState() as RootState).idb.rawId
 
-
     useEffect(() => {
         if (rawId.length) {
             setStep(2)

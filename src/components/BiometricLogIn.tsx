@@ -3,21 +3,25 @@ import {FC} from "react";
 import {RootState, store} from "../store";
 import {saveLargeBlob, tryBiometricLogin} from "../utils/helpers.ts";
 import {setIv, setSalt} from "../store/idbSlice.ts";
+import {useDispatch} from "react-redux";
 
 const BiometricLogIn: FC<{ onComplete: () => void }> = ({onComplete}) => {
+
+    const dispatch = useDispatch();
+
     const logInBio = async () => {
         if ((store.getState() as RootState).idb.seed) {
             const largeBlob = await tryBiometricLogin()
             if (largeBlob) {
-                setSalt(largeBlob.salt)
-                setIv(largeBlob.iv)
+                dispatch(setSalt(largeBlob.salt))
+                dispatch(setIv(largeBlob.iv))
                 onComplete()
             }
         } else {
             const largeBlob = await saveLargeBlob()
             if (largeBlob) {
-                setSalt(largeBlob.salt)
-                setIv(largeBlob.iv)
+                dispatch(setSalt(largeBlob.salt))
+                dispatch(setIv(largeBlob.iv))
                 onComplete()
             }
         }

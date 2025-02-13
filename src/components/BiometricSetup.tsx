@@ -9,7 +9,7 @@ const BiometricSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
             const rawId = await registerBiometric();
             if (rawId) {
                 setRawId(Array.from(new Uint8Array(rawId)));
-                await setItem("settings", "biometric-key", Array.from(new Uint8Array(rawId)))
+                await setItem("settings", "rawId", Array.from(new Uint8Array(rawId)))
                 onComplete();
             } else {
                 alert("Ошибка регистрации биометрии.");
