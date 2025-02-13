@@ -3,21 +3,30 @@ import {createRoot} from 'react-dom/client'
 import './index.css'
 import App from './App.tsx'
 
-const root  = createRoot(document.getElementById('root') as HTMLElement)
+import {Provider} from "react-redux";
+import {store} from "./store";
+import LoadApp from "./LoadApp.tsx";
+
+const root = createRoot(document.getElementById('root') as HTMLElement)
 
 const prepareApp = async () => {
-    const { worker } = await import('./mocks/browser')
-    return  worker.start({
+    const {worker} = await import('./mocks/browser')
+    return worker.start({
         serviceWorker: {
             url: "./mockServiceWorker.js",
         },
     });
 }
 
-prepareApp().then(()=>{
+
+prepareApp().then(() => {
     root.render(
         <StrictMode>
-            <App/>
+            <Provider store={store}>
+                <LoadApp>
+                    <App/>
+                </LoadApp>
+            </Provider>
         </StrictMode>,
     )
 })

@@ -1,11 +1,15 @@
 import { Box, Button, Typography } from "@mui/material";
 import { registerBiometric} from "../utils/helpers.ts";
+import {setItem} from "../utils/db.ts";
+import {setRawId} from "../store/idbSlice.ts";
 
 const BiometricSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) => {
     const handleEnableBiometrics = async () => {
         try {
-            const success = await registerBiometric();
-            if (success) {
+            const rawId = await registerBiometric();
+            if (rawId) {
+                setRawId(Array.from(new Uint8Array(rawId)));
+                await setItem("settings", "biometric-key", Array.from(new Uint8Array(rawId)))
                 onComplete();
             } else {
                 alert("Ошибка регистрации биометрии.");

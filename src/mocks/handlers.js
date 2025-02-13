@@ -55,10 +55,9 @@ export const handlers = [
         return HttpResponse.json({success: true, token: "mocked-token"});
     }),
 
-    // Генерация OTP
-    http.get("/api/otp", async () => {
-        console.log("Mock for /api/otp triggered");
-        const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        return HttpResponse.json({otp});
+    // Генерация seed
+    http.get("/api/getSeed", async () => {
+        const seed = "KVKFKRCPNZQUYMLXOVYDSQKJKZDTSRLD";
+        return HttpResponse.json({seed});
     }),
 ];

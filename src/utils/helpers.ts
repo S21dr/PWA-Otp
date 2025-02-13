@@ -1,5 +1,3 @@
-import {IPinRow} from "./db.ts";
-
 interface ExtendedAuthenticationExtensionsClientOutputs extends AuthenticationExtensionsClientOutputs {
     largeBlob?: { blob: ArrayBuffer };
 }
@@ -14,82 +12,82 @@ export function generateIV() {
     return crypto.getRandomValues(new Uint8Array(12));
 }
 
-// Функция для шифрования пин-кода с использованием Web Crypto API
-export async function encryptPin(pin: string, salt: Uint8Array, iv: Uint8Array) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(pin); // Преобразуем пин-код в массив байтов
-
-    // Генерация ключа для шифрования
-    const key = await crypto.subtle.importKey(
-        "raw",
-        salt,
-        {name: "PBKDF2"},
-        false,
-        ["deriveKey"]
-    );
-
-    // Используем PBKDF2 для получения ключа для шифрования
-    const cryptoKey = await crypto.subtle.deriveKey(
-        {
-            name: "PBKDF2",
-            salt: salt,
-            iterations: 100000,
-            hash: "SHA-256",
-        },
-        key,
-        {name: "AES-GCM", length: 256},
-        false,
-        ["encrypt", "decrypt"]
-    );
-
-    // Шифруем пин-код
-    const encryptedData = await crypto.subtle.encrypt(
-        {name: "AES-GCM", iv: iv}, // Используем случайный IV
-        cryptoKey,
-        data
-    );
-
-    return encryptedData;
-}
-
-// Функция для дешифрования пин-кода
-export async function decryptPin({encryptedPin, salt, iv}: IPinRow) {
-    const key = await crypto.subtle.importKey(
-        "raw",
-        salt,
-        {name: "PBKDF2"},
-        false,
-        ["deriveKey"]
-    );
-
-    const cryptoKey = await crypto.subtle.deriveKey(
-        {
-            name: "PBKDF2",
-            salt: salt,
-            iterations: 100000,
-            hash: "SHA-256",
-        },
-        key,
-        {name: "AES-GCM", length: 256},
-        false,
-        ["encrypt", "decrypt"]
-    );
-
-    // Дешифруем пин-код
-    const decryptedData = await crypto.subtle.decrypt(
-        {name: "AES-GCM", iv: iv}, // IV должно совпадать с тем, что использовался при шифровании
-        cryptoKey,
-        encryptedPin
-    );
-
-    const decoder = new TextDecoder();
-    return decoder.decode(decryptedData);
-}
+// // Функция для шифрования пин-кода с использованием Web Crypto API
+// export async function encryptPin(pin: string, salt: Uint8Array, iv: Uint8Array) {
+//     const encoder = new TextEncoder();
+//     const data = encoder.encode(pin); // Преобразуем пин-код в массив байтов
+//
+//     // Генерация ключа для шифрования
+//     const key = await crypto.subtle.importKey(
+//         "raw",
+//         salt,
+//         {name: "PBKDF2"},
+//         false,
+//         ["deriveKey"]
+//     );
+//
+//     // Используем PBKDF2 для получения ключа для шифрования
+//     const cryptoKey = await crypto.subtle.deriveKey(
+//         {
+//             name: "PBKDF2",
+//             salt: salt,
+//             iterations: 100000,
+//             hash: "SHA-256",
+//         },
+//         key,
+//         {name: "AES-GCM", length: 256},
+//         false,
+//         ["encrypt", "decrypt"]
+//     );
+//
+//     // Шифруем пин-код
+//     const encryptedData = await crypto.subtle.encrypt(
+//         {name: "AES-GCM", iv: iv}, // Используем случайный IV
+//         cryptoKey,
+//         data
+//     );
+//
+//     return encryptedData;
+// }
+//
+// // Функция для дешифрования пин-кода
+// export async function decryptPin({encryptedPin, salt, iv}: IPinRow) {
+//     const key = await crypto.subtle.importKey(
+//         "raw",
+//         salt,
+//         {name: "PBKDF2"},
+//         false,
+//         ["deriveKey"]
+//     );
+//
+//     const cryptoKey = await crypto.subtle.deriveKey(
+//         {
+//             name: "PBKDF2",
+//             salt: salt,
+//             iterations: 100000,
+//             hash: "SHA-256",
+//         },
+//         key,
+//         {name: "AES-GCM", length: 256},
+//         false,
+//         ["encrypt", "decrypt"]
+//     );
+//
+//     // Дешифруем пин-код
+//     const decryptedData = await crypto.subtle.decrypt(
+//         {name: "AES-GCM", iv: iv}, // IV должно совпадать с тем, что использовался при шифровании
+//         cryptoKey,
+//         encryptedPin
+//     );
+//
+//     const decoder = new TextDecoder();
+//     return decoder.decode(decryptedData);
+// }
 
 // Функция для регистрации биометрии
 
-export async function registerBiometric(): Promise<boolean> {
-    if (!window.PublicKeyCredential) return false;
+export async function registerBiometric(): Promise<null | ArrayBuffer> {
+    if (!window.PublicKeyCredential) return null;
     try {
         const response = await fetch("/api/register-challenge", {
             method: "POST",
@@ -102,7 +100,6 @@ export async function registerBiometric(): Promise<boolean> {
 
         // Преобразуем user.id из ArrayBuffer в Uint8Array
         publicKey.user.id = new Uint8Array(2);
-
 
 
         const credential = (await navigator.credentials.create({
@@ -120,7 +117,7 @@ export async function registerBiometric(): Promise<boolean> {
 
         if (!credential) {
             console.error("Ошибка при создании ключа");
-            return false
+            return null
         }
 
         const regResp = await fetch("/api/register", {
@@ -138,11 +135,14 @@ export async function registerBiometric(): Promise<boolean> {
         });
         const registration = await regResp.json();
 
-        return !!registration?.success;
+        if (registration?.success) {
+            return credential.rawId
+        }
+        return null
 
     } catch (error) {
         console.error("Ошибка при регистрации:", error);
-        return false
+        return null
         //alert(`❌ Ошибка при регистрации ${error?.toString()}`);
     }
 }
@@ -167,7 +167,7 @@ export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Arra
             iv: Array.from(iv)
         }));
 
-        const credential =  await navigator.credentials.get({
+        const credential = await navigator.credentials.get({
             publicKey: {
                 ...publicKey,
                 extensions: {
@@ -204,7 +204,7 @@ export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Arra
         }
         return null
     } catch (error) {
-        alert(`Ошибка при созранении largeBlob:${ JSON.stringify(error)}`,);
+        alert(`Ошибка при создании largeBlob:${JSON.stringify(error)}`,);
         return null
     }
 }
@@ -274,7 +274,16 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
         }
         return null
     } catch (error) {
-        alert(`Ошибка при входе:${ JSON.stringify(error)}`,);
+        alert(`Ошибка при входе:${JSON.stringify(error)}`,);
         return null
     }
+}
+
+export const fetchSeed   = async ():Promise<string> => {
+    const fetchSeedResponse = await fetch("/api/getSeed", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+    })
+    const res = await fetchSeedResponse.json();
+    return res?.seed
 }

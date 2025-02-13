@@ -1,39 +1,26 @@
-import { openDB } from "idb";
+import { RootState } from '../store';
+import { store } from '../store';
+import {AppDB} from "../store/idb.ts";
+//
+// 📌 Функция записи данных
+export const setItem = async <T extends keyof AppDB>(
+    storeName: "settings",
+    key: IDBValidKey,
+    value: AppDB[T]['value']
+): Promise<void> => {
+    const db = (store.getState() as RootState).idb.db;
+    if (!db) throw new Error('IndexedDB не загружена');
 
-const DB_NAME = "authDB";
-const STORE_NAME = "authStore";
+    await db.put(storeName, value, key);
+};
 
-export interface IPinRow {
-    encryptedPin:  ArrayBuffer
-    salt: Uint8Array
-    iv: Uint8Array
-
-}
-
-async function getDB() {
-    return openDB(DB_NAME, 1, {
-        upgrade(db) {
-            db.createObjectStore(STORE_NAME);
-        },
-    });
-}
-
-export async function savePinToDB(pinRow: {encryptedPin: ArrayBuffer}) {
-    const db = await getDB();
-    await db.put(STORE_NAME, pinRow, "pin");
-}
-
-export async function getStoredPin() {
-    const db = await getDB();
-    return db.get(STORE_NAME, "pin") as Promise<{encryptedPin: ArrayBuffer}>;
-}
-
-export async function saveBiometricSetting(enabled: boolean) {
-    const db = await getDB();
-    await db.put(STORE_NAME, enabled, "biometric");
-}
-
-export async function getBiometricSetting() {
-    const db = await getDB();
-    return db.get(STORE_NAME, "biometric");
-}
+// // 📌 Функция чтения данных
+// export const getItem = async <T extends keyof AppDB>(
+//     storeName: T,
+//     key: AppDB[T]['key']
+// ): Promise<AppDB[T]['value'] | undefined> => {
+//     const db = (store.getState() as RootState).idb.db;
+//     if (!db) throw new Error('IndexedDB не загружена');
+//
+//     return db.get(storeName, key);
+// };
