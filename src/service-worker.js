@@ -7,16 +7,6 @@ import {CacheableResponsePlugin} from 'workbox-cacheable-response';
 // Предзагрузка файлов, указанных в манифесте Workbox
 precacheAndRoute(self.__WB_MANIFEST);
 
-// 📌 Кешируем `index.html` и главную страницу PWA
-registerRoute(
-    ({ url }) => url.pathname === '/PWA-Otp/' || url.pathname === '/PWA-Otp/index.html',
-    new StaleWhileRevalidate({
-        cacheName: 'html-cache',
-        plugins: [
-            new ExpirationPlugin({ maxEntries: 1, maxAgeSeconds: 60 * 60 * 24 }),
-        ],
-    })
-);
 
 // Кеширование статических файлов (CSS, JS, шрифты, изображения)
 registerRoute(
@@ -120,43 +110,52 @@ const mockData = {
 //     );
 // });
 
-// 📌 Обрабатываем API-запросы с моками
-registerRoute(
-    ({ request }) => request.url.startsWith('https://s21dr.github.io/api/'),
-    async ({ event }) => {
-        const { request } = event;
+// 🔹 Обработка всех fetch-запросов (моки + сеть + кеш)
+self.addEventListener('fetch', (event) => {
+    const { request } = event;
 
-        // Проверяем, есть ли мок-ответ
-        if (mockData[request.url]) {
-            return new Response(
-                JSON.stringify(mockData[request.url].body),
-                { status: mockData[request.url].status, headers: { 'Content-Type': 'application/json' } }
-            );
-        }
-
-        // Используем NetworkFirst для API
-        const networkFirst = new NetworkFirst({
-            cacheName: 'api-cache',
-            plugins: [
-                new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 }),
-            ],
-        });
-
-        return networkFirst.handle({ event });
+    // 1️⃣ Проверяем, замокан ли этот запрос
+    if (mockData[request.url]) {
+        const mockResponse = new Response(
+            JSON.stringify(mockData[request.url].body),
+            { status: mockData[request.url].status, headers: { 'Content-Type': 'application/json' } }
+        );
+        event.respondWith(mockResponse);
+        return;
     }
-);
 
-// Активируем новый Service Worker сразу после установки
+    // 2️⃣ Все остальные запросы — сначала сеть, потом кеш
+    event.respondWith(
+        fetch(event.request)
+            .then(response => {
+                if (!response || response.status !== 200 || response.type !== 'basic') {
+                    return response;
+                }
+
+                // Клонируем ответ и сохраняем в кеш
+                const responseToCache = response.clone();
+                caches.open('dynamic-cache').then(cache => {
+                    cache.put(event.request, responseToCache);
+                });
+
+                return response;
+            })
+            .catch(() => caches.match(event.request).then(cachedResponse => cachedResponse || new Response("Offline mode", { status: 503 })))
+    );
+});
+
+// 🔹 Активируем новый Service Worker сразу после установки
 self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// Удаляем старые кеши при активации нового Service Worker
+// 🔹 Удаляем старые кеши при активации нового Service Worker
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.filter((cacheName) => cacheName !== 'static-resources' && cacheName !== 'api-cache' && cacheName !== 'html-cache')
+                cacheNames
+                    .filter((cacheName) => !cacheName.includes(self.__WB_MANIFEST)) // Оставляем только актуальный кеш
                     .map((cacheName) => caches.delete(cacheName))
             );
         })
