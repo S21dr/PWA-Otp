@@ -4,23 +4,18 @@ import {StaleWhileRevalidate, CacheFirst, NetworkFirst} from 'workbox-strategies
 import {ExpirationPlugin} from 'workbox-expiration';
 import {CacheableResponsePlugin} from 'workbox-cacheable-response';
 
-// Предзагрузка файлов, указанных в манифесте Workbox
+
+// Кеширование файлов из /dist
 precacheAndRoute(self.__WB_MANIFEST);
-
-// Создаем обработчик для index.html
-const handler = createHandlerBoundToURL('/PWA-Otp/index.html');
-
-// Регистрируем маршрут для всех навигационных запросов
-const navigationRoute = new NavigationRoute(handler, {
-    allowlist: [new RegExp('^/PWA-Otp/')],
-});
-
-registerRoute(navigationRoute);
 
 
 // Кеширование статических файлов (CSS, JS, шрифты, изображения)
 registerRoute(
-    ({request}) => request.destination === 'style' || request.destination === 'script' || request.destination === 'font' || request.destination === 'image',
+    (route) => {
+        console.log("route",route);
+        const { request} = route
+        return request.destination === 'style' || request.destination === 'script' || request.destination === 'font' || request.destination === 'image'
+    },
     new CacheFirst({
         cacheName: 'static-resources',
         plugins: [
@@ -30,17 +25,18 @@ registerRoute(
     })
 );
 
-// Кеширование API запросов
-registerRoute(
-    ({ url }) => url.pathname.startsWith('/api/'),
-    new NetworkFirst({
-        cacheName: 'api-cache',
-        plugins: [
-            new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 }),
-            new CacheableResponsePlugin({ statuses: [0, 200] }),
-        ],
-    })
-);
+
+// // Кеширование API запросов
+// registerRoute(
+//     ({url}) => url.pathname.startsWith('/api/'),
+//     new NetworkFirst({
+//         cacheName: 'api-cache',
+//         plugins: [
+//             new ExpirationPlugin({maxEntries: 50, maxAgeSeconds: 60 * 60}),
+//             new CacheableResponsePlugin({statuses: [0, 200]}),
+//         ],
+//     })
+// );
 
 
 // Функция для генерации challenge
@@ -168,13 +164,13 @@ const mockData = {
 
 // Обработка всех fetch-запросов (моки + сеть + кеш)
 self.addEventListener('fetch', (event) => {
-    const { request } = event;
+    const {request} = event;
 
     // Проверяем, замокан ли этот запрос
     if (mockData[request.url]) {
         const mockResponse = new Response(
             JSON.stringify(mockData[request.url].body),
-            { status: mockData[request.url].status, headers: { 'Content-Type': 'application/json' } }
+            {status: mockData[request.url].status, headers: {'Content-Type': 'application/json'}}
         );
         event.respondWith(mockResponse);
         return;
@@ -194,7 +190,7 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.filter((cacheName) => !['static-resources', 'api-cache', 'workbox-precache'].includes(cacheName))
+                cacheNames.filter((cacheName) => !['static-resources', ].includes(cacheName))
                     .map((cacheName) => caches.delete(cacheName))
             );
         })

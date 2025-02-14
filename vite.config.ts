@@ -44,8 +44,13 @@ export default defineConfig({
                     }
                 ]
             },
-            workbox: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+            injectManifest: {
+                globDirectory: 'dist',  // Указываем путь к билду
+                globPatterns: ["**/*.{js,css,html,png,svg,json}"],  // Какие файлы кешировать
+                modifyURLPrefix: {
+                    "": "/PWA-Otp/",  // Добавляем префикс ко всем URL
+                },
+                sourcemap: true,
             },
         }),
     ],
