@@ -59,11 +59,11 @@ const publicKeyOptions = {
 
 // Мокированные ответы
 const mockData = {
-    'https://s21dr.github.io/PWA-Otp/api/register-challenge': {
+    'https://s21dr.github.io/api/register-challenge': {
         status: 200,
         body: {publicKey: publicKeyOptions},
     },
-    'https://s21dr.github.io/PWA-Otp/api/login-challenge': {
+    'https://s21dr.github.io/api/login-challenge': {
         status: 200,
         body: {
             challenge: generateChallenge(), // ✅ challenge в формате ArrayBuffer
@@ -72,15 +72,15 @@ const mockData = {
             userVerification: "required",
         },
     },
-    'https://s21dr.github.io/PWA-Otp/api/register': {
+    'https://s21dr.github.io/api/register': {
         status: 200,
         body: {success: true},
     },
-    'https://s21dr.github.io/PWA-Otp/api/login': {
+    'https://s21dr.github.io/api/login': {
         status: 200,
         body: {success: true, token: "mocked-token"},
     },
-    'https://s21dr.github.io/PWA-Otp/api/get-seed': {
+    'https://s21dr.github.io/api/get-seed': {
         status: 200,
         body: {seed: "KVKFKRCPNZQUYMLXOVYDSQKJKZDTSRLD"},
     },
