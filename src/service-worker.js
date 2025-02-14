@@ -7,6 +7,17 @@ import {CacheableResponsePlugin} from 'workbox-cacheable-response';
 // Предзагрузка файлов, указанных в манифесте Workbox
 precacheAndRoute(self.__WB_MANIFEST);
 
+// 📌 Кешируем `index.html` и главную страницу PWA
+registerRoute(
+    ({ url }) => url.pathname === '/PWA-Otp/' || url.pathname === '/PWA-Otp/index.html',
+    new StaleWhileRevalidate({
+        cacheName: 'html-cache',
+        plugins: [
+            new ExpirationPlugin({ maxEntries: 1, maxAgeSeconds: 60 * 60 * 24 }),
+        ],
+    })
+);
+
 // Кеширование статических файлов (CSS, JS, шрифты, изображения)
 registerRoute(
     ({request}) => request.destination === 'style' || request.destination === 'script' || request.destination === 'font' || request.destination === 'image',
@@ -19,16 +30,7 @@ registerRoute(
     })
 );
 
-// API-запросы — сначала сеть, потом кеш
-registerRoute(
-    ({url}) => url.origin.includes('api'),
-    new NetworkFirst({
-        cacheName: 'api-cache',
-        plugins: [
-            new ExpirationPlugin({maxEntries: 10, maxAgeSeconds: 60 * 60 * 24}),
-        ],
-    })
-);
+
 
 // Функция для генерации challenge
 const generateChallenge = () => {
@@ -86,24 +88,30 @@ const mockData = {
     },
 };
 
-// Перехватываем fetch-запросы
-self.addEventListener('fetch', (event) => {
-    const {request} = event;
-
-    // Проверяем, замокан ли этот запрос
-    if (mockData[request.url]) {
-        // Если запрос совпадает с мокированным URL, возвращаем замоканный ответ
-        const mockResponse = new Response(
-            JSON.stringify(mockData[request.url].body),
-            {status: mockData[request.url].status, headers: {'Content-Type': 'application/json'}}
-        );
-
-        event.respondWith(mockResponse);
-    } else {
-        // Если запрос не замокан, передаем его дальше
-        event.respondWith(fetch(request));
-    }
-});
+// // Перехватываем fetch-запросы
+// self.addEventListener('fetch', (event) => {
+//     const {request} = event;
+//
+//     // Проверяем, замокан ли этот запрос
+//     if (mockData[request.url]) {
+//         // Если запрос совпадает с мокированным URL, возвращаем замоканный ответ
+//         const mockResponse = new Response(
+//             JSON.stringify(mockData[request.url].body),
+//             {status: mockData[request.url].status, headers: {'Content-Type': 'application/json'}}
+//         );
+//
+//         event.respondWith(mockResponse);
+//     } else {
+//         // Если запрос не замокан, передаем его дальше
+//         event.respondWith(
+//             fetch(event.request)
+//                 .then(response => {
+//                     return response;
+//                 }).catch(()=>caches.match(event.request).then((cachedResponse) => cachedResponse || fetch(event.request)))
+//
+//         );
+//     }
+// });
 
 // // Для остальных запросов — кэш или сеть
 // self.addEventListener('fetch', (event) => {
@@ -111,6 +119,32 @@ self.addEventListener('fetch', (event) => {
 //         caches.match(event.request).then((cachedResponse) => cachedResponse || fetch(event.request))
 //     );
 // });
+
+// 📌 Обрабатываем API-запросы с моками
+registerRoute(
+    ({ request }) => request.url.startsWith('https://s21dr.github.io/api/'),
+    async ({ event }) => {
+        const { request } = event;
+
+        // Проверяем, есть ли мок-ответ
+        if (mockData[request.url]) {
+            return new Response(
+                JSON.stringify(mockData[request.url].body),
+                { status: mockData[request.url].status, headers: { 'Content-Type': 'application/json' } }
+            );
+        }
+
+        // Используем NetworkFirst для API
+        const networkFirst = new NetworkFirst({
+            cacheName: 'api-cache',
+            plugins: [
+                new ExpirationPlugin({ maxEntries: 10, maxAgeSeconds: 60 * 60 * 24 }),
+            ],
+        });
+
+        return networkFirst.handle({ event });
+    }
+);
 
 // Активируем новый Service Worker сразу после установки
 self.addEventListener('install', (event) => {
@@ -122,7 +156,7 @@ self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.filter((cacheName) => cacheName !== 'static-resources' && cacheName !== 'api-cache')
+                cacheNames.filter((cacheName) => cacheName !== 'static-resources' && cacheName !== 'api-cache' && cacheName !== 'html-cache')
                     .map((cacheName) => caches.delete(cacheName))
             );
         })
