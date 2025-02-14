@@ -26,11 +26,9 @@ export default defineConfig({
         nodePolyfills(),
         VitePWA({
             base: "/PWA-Otp/",
-            // strategies: 'injectManifest',
-            // srcDir: 'src',
-            // filename: 'service-worker.js',
-            // devOptions: { enabled: true },
-            // registerType: 'autoUpdate',
+            strategies: 'injectManifest',
+            srcDir: 'src',
+            filename: 'service-worker.js',
             manifest: {
                 name: "PWA OTP",
                 short_name: "PWA OTP",
