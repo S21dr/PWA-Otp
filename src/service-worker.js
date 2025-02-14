@@ -7,6 +7,16 @@ import {CacheableResponsePlugin} from 'workbox-cacheable-response';
 // Предзагрузка файлов, указанных в манифесте Workbox
 precacheAndRoute(self.__WB_MANIFEST);
 
+// Создаем обработчик для index.html
+const handler = createHandlerBoundToURL('/PWA-Otp/index.html');
+
+// Регистрируем маршрут для всех навигационных запросов
+const navigationRoute = new NavigationRoute(handler, {
+    allowlist: [new RegExp('^/PWA-Otp/')],
+});
+
+registerRoute(navigationRoute);
+
 
 // Кеширование статических файлов (CSS, JS, шрифты, изображения)
 registerRoute(
@@ -20,6 +30,17 @@ registerRoute(
     })
 );
 
+// Кеширование API запросов
+registerRoute(
+    ({ url }) => url.pathname.startsWith('/PWA-Otp/api/'),
+    new NetworkFirst({
+        cacheName: 'api-cache',
+        plugins: [
+            new ExpirationPlugin({ maxEntries: 50, maxAgeSeconds: 60 * 60 }),
+            new CacheableResponsePlugin({ statuses: [0, 200] }),
+        ],
+    })
+);
 
 
 // Функция для генерации challenge
@@ -111,10 +132,45 @@ const mockData = {
 // });
 
 // 🔹 Обработка всех fetch-запросов (моки + сеть + кеш)
+// self.addEventListener('fetch', (event) => {
+//     const { request } = event;
+//
+//     // 1️⃣ Проверяем, замокан ли этот запрос
+//     if (mockData[request.url]) {
+//         const mockResponse = new Response(
+//             JSON.stringify(mockData[request.url].body),
+//             { status: mockData[request.url].status, headers: { 'Content-Type': 'application/json' } }
+//         );
+//         event.respondWith(mockResponse);
+//         return;
+//     }
+//
+//     // 2️⃣ Все остальные запросы — сначала сеть, потом кеш
+//     event.respondWith(
+//         fetch(event.request)
+//             .then(response => {
+//                 if (!response || response.status !== 200 || response.type !== 'basic') {
+//                     return response;
+//                 }
+//
+//                 // Клонируем ответ и сохраняем в кеш
+//                 const responseToCache = response.clone();
+//                 caches.open('dynamic-cache').then(cache => {
+//                     cache.put(event.request, responseToCache);
+//                 });
+//
+//                 return response;
+//             })
+//             .catch(() => caches.match(event.request).then(cachedResponse => cachedResponse || new Response("Offline mode", { status: 503 })))
+//     );
+// });
+
+
+// Обработка всех fetch-запросов (моки + сеть + кеш)
 self.addEventListener('fetch', (event) => {
     const { request } = event;
 
-    // 1️⃣ Проверяем, замокан ли этот запрос
+    // Проверяем, замокан ли этот запрос
     if (mockData[request.url]) {
         const mockResponse = new Response(
             JSON.stringify(mockData[request.url].body),
@@ -124,24 +180,7 @@ self.addEventListener('fetch', (event) => {
         return;
     }
 
-    // 2️⃣ Все остальные запросы — сначала сеть, потом кеш
-    event.respondWith(
-        fetch(event.request)
-            .then(response => {
-                if (!response || response.status !== 200 || response.type !== 'basic') {
-                    return response;
-                }
-
-                // Клонируем ответ и сохраняем в кеш
-                const responseToCache = response.clone();
-                caches.open('dynamic-cache').then(cache => {
-                    cache.put(event.request, responseToCache);
-                });
-
-                return response;
-            })
-            .catch(() => caches.match(event.request).then(cachedResponse => cachedResponse || new Response("Offline mode", { status: 503 })))
-    );
+    // Все остальные запросы обрабатываются стратегиями Workbox
 });
 
 // 🔹 Активируем новый Service Worker сразу после установки
@@ -149,12 +188,13 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
+
 // Удаляем старые кеши при активации нового Service Worker
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames.filter((cacheName) => cacheName !== 'static-resources' && cacheName !== 'dynamic-cache')
+                cacheNames.filter((cacheName) => !['static-resources', 'api-cache', 'workbox-precache'].includes(cacheName))
                     .map((cacheName) => caches.delete(cacheName))
             );
         })
