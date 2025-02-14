@@ -149,13 +149,12 @@ self.addEventListener('install', (event) => {
     self.skipWaiting();
 });
 
-// 🔹 Удаляем старые кеши при активации нового Service Worker
+// Удаляем старые кеши при активации нового Service Worker
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
-                cacheNames
-                    .filter((cacheName) => !cacheName.includes(self.__WB_MANIFEST)) // Оставляем только актуальный кеш
+                cacheNames.filter((cacheName) => cacheName !== 'static-resources' && cacheName !== 'dynamic-cache')
                     .map((cacheName) => caches.delete(cacheName))
             );
         })
