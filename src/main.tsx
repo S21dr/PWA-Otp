@@ -10,9 +10,9 @@ import LoadApp from "./LoadApp.tsx";
 const root = createRoot(document.getElementById('root') as HTMLElement)
 
 const prepareApp = async () => {
-    if ('serviceWorker' in navigator) {
-        await navigator.serviceWorker.register('./service-worker.js',);
-    }
+    // if ('serviceWorker' in navigator) {
+    //     await navigator.serviceWorker.register('./service-worker.js',);
+    // }
     // const {worker} = await import('./mocks/browser')
     // return worker.start({
     //     serviceWorker: {

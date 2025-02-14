@@ -46,9 +46,9 @@ export default defineConfig({
                     }
                 ]
             },
-            injectManifest: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg}']
-            }
+            workbox: {
+                globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+            },
         }),
     ],
     base: "/PWA-Otp/", // YOUR REPO NAME HERE

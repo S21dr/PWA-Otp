@@ -32,7 +32,7 @@ registerRoute(
 
 // Кеширование API запросов
 registerRoute(
-    ({ url }) => url.pathname.startsWith('/PWA-Otp/api/'),
+    ({ url }) => url.pathname.startsWith('/api/'),
     new NetworkFirst({
         cacheName: 'api-cache',
         plugins: [
