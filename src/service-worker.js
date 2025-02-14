@@ -1,5 +1,5 @@
-import {precacheAndRoute} from 'workbox-precaching';
-import {registerRoute} from 'workbox-routing';
+import {precacheAndRoute, createHandlerBoundToURL} from 'workbox-precaching';
+import {NavigationRoute, registerRoute} from 'workbox-routing';
 import {StaleWhileRevalidate, CacheFirst, NetworkFirst} from 'workbox-strategies';
 import {ExpirationPlugin} from 'workbox-expiration';
 import {CacheableResponsePlugin} from 'workbox-cacheable-response';
