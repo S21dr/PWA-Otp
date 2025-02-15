@@ -4,7 +4,6 @@ import checker from "vite-plugin-checker";
 import {nodePolyfills} from "vite-plugin-node-polyfills";
 import {VitePWA} from "vite-plugin-pwa";
 
-
 // https://vite.dev/config/
 export default defineConfig({
     server: {

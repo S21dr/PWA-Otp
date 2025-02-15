@@ -7,6 +7,7 @@ import {Provider} from "react-redux";
 import {store} from "./store";
 import LoadApp from "./LoadApp.tsx";
 
+
 const root = createRoot(document.getElementById('root') as HTMLElement)
 
 const prepareApp = async () => {
