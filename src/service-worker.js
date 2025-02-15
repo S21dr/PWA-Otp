@@ -80,21 +80,18 @@ const mockData = {
 
 
 
-// Обработка всех fetch-запросов (моки + сеть + кеш)
+// Обработка всех fetch-запросов (моки + сеть)
 self.addEventListener('fetch', (event) => {
     const {request} = event;
 
     // Проверяем, замокан ли этот запрос
-    if (mockData[request.url]) {
+    if (mockData[request.url] && navigator?.onLine) {
         const mockResponse = new Response(
             JSON.stringify(mockData[request.url].body),
             {status: mockData[request.url].status, headers: {'Content-Type': 'application/json'}}
         );
         event.respondWith(mockResponse);
-        return;
     }
-
-    // Все остальные запросы обрабатываются стратегиями Workbox
 });
 
 // 🔹 Активируем новый Service Worker сразу после установки
