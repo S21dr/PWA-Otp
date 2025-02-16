@@ -237,6 +237,9 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
             publicKey = await response.json() as PublicKeyCredentialRequestOptions;
             // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
             publicKey.challenge = new Uint8Array(publicKey?.challenge as  ArrayBuffer).buffer;
+            publicKey.extensions = {
+                largeBlob: {read: true}
+            } as  AuthenticationExtensionsClientInputs
         }
 
 
