@@ -24,7 +24,7 @@ const App: FC = () => {
             <Box mt={5}>
                 {step === 1 && <BiometricSetup onComplete={() => setStep(2)}/>}
                 {step === 2 && <BiometricLogIn onComplete={() => setStep(3)}/>}
-                {step === 3 && <OTPDisplay/>}
+                {step === 3 && <OTPDisplay hideOtp={() => setStep(3)}/>}
             </Box>
         </Container>
     );
