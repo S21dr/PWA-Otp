@@ -209,51 +209,67 @@ export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Arra
     }
 }
 
+const generateChallenge = () => {
+    const challenge = new Uint8Array(32);
+    crypto.getRandomValues(challenge);
+    return challenge.buffer;
+};
 
 // Функция для аутентификации по биометрии
 export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
     if (!window.PublicKeyCredential) return null;
     try {
-        const response = await fetch("/api/login-challenge", {
-            method: "POST",
-        });
-        const publicKey = await response.json();
-        // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
-        publicKey.challenge = new Uint8Array(publicKey?.challenge).buffer;
+        let publicKey = {
+            challenge: generateChallenge(),
+            timeout: 60000,
+            rpId: "s21dr.github.io",
+            userVerification: "required",
+            extensions: {
+                largeBlob: {read: true} // Запрашиваем данные из largeBlob
+            }
+        }  as  PublicKeyCredentialRequestOptions
+
+        if (navigator?.onLine){
+            const response = await fetch("/api/login-challenge", {
+                method: "POST",
+            });
+
+            publicKey = await response.json() as PublicKeyCredentialRequestOptions;
+            // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
+            publicKey.challenge = new Uint8Array(publicKey?.challenge as  ArrayBuffer).buffer;
+        }
+
+
 
         const credential = (await navigator.credentials.get({
-            publicKey: {
-                ...publicKey,
-                extensions: {
-                    largeBlob: {read: true} // Запрашиваем данные из largeBlob
-                }
-            },
+            publicKey,
         })) as PublicKeyCredential;
 
         if (!credential) {
             console.error("Ошибка аутентификации,  не получилось получить credential");
             return null
         }
+        let result;
+        if (navigator?.onLine){
+            const loginResponse = await fetch("/api/login", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({
+                    id: credential.id,
+                    rawId: Array.from(new Uint8Array(credential.rawId)),
+                    response: {
+                        authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
+                        clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
+                        signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature)),
+                    },
+                    type: credential.type,
+                }),
+            });
 
-        const loginResponse = await fetch("/api/login", {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify({
-                id: credential.id,
-                rawId: Array.from(new Uint8Array(credential.rawId)),
-                response: {
-                    authenticatorData: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).authenticatorData)),
-                    clientDataJSON: Array.from(new Uint8Array(credential.response.clientDataJSON)),
-                    signature: Array.from(new Uint8Array((credential.response as AuthenticatorAssertionResponse).signature)),
-                },
-                type: credential.type,
-            }),
-        });
+            result = await loginResponse.json();
 
-        const result = await loginResponse.json();
-
-
-        if (result?.success) {
+        }
+        if (result?.success || !navigator?.onLine) {
             if (credential && "getClientExtensionResults" in credential) {
                 const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
                 if (extensionResults.largeBlob) {
@@ -272,6 +288,7 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
                 alert(`getClientExtensionResults not exist: ${JSON.stringify(credential)}`)
             }
         }
+
         return null
     } catch (error) {
         alert(`Ошибка при входе:${JSON.stringify(error)}`,);
