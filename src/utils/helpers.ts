@@ -12,6 +12,11 @@ export function generateIV() {
     return crypto.getRandomValues(new Uint8Array(12));
 }
 
+interface IError {
+    message: string;
+    stack: string;
+}
+
 // Функция для шифрования секрета с использованием Web Crypto API
 export async function encrypt(secret: string, salt: Uint8Array, iv: Uint8Array) {
     const encoder = new TextEncoder();
@@ -142,6 +147,9 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         return null
 
     } catch (error) {
+        console.log("error",error as IError)
+        const err = error as IError;
+        alert(`Ошибка: ${err.message}\nСтек вызовов:\n${err.stack}`);
         alert(`Ошибка при регистрации ${JSON.stringify(error)}`);
         return null
         //alert(`❌ Ошибка при регистрации ${error?.toString()}`);
