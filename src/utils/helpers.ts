@@ -97,6 +97,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         const response = await fetch("/api/register-challenge", {
             method: "POST",
         });
+        alert(`response ${JSON.stringify(response, null, 2)}`);
         const res = await response.json();
         const {publicKey} = res
 
@@ -106,7 +107,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         // Преобразуем user.id из ArrayBuffer в Uint8Array
         publicKey.user.id = new Uint8Array(2);
 
-
+        alert(`publicKey ${JSON.stringify(publicKey, null, 2)}`);
         const credential = (await navigator.credentials.create({
             publicKey: {
                 ...publicKey,
@@ -121,7 +122,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
 
 
         if (!credential) {
-            alert(`Ошибка при создании ключа ${JSON.stringify(credential)}`);
+            alert(`Ошибка при создании ключа ${JSON.stringify(credential, null, 2)}`);
             return null
         }
 
@@ -143,14 +144,12 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         if (registration?.success) {
             return credential.rawId
         }
-        alert(`Ошибка при registration ключа ${JSON.stringify(registration)}`);
+        alert(`Ошибка при registration ключа ${JSON.stringify(registration, null, 2)}`);
         return null
 
     } catch (error) {
         console.log("error",error as IError)
-        const err = error as IError;
-        alert(`Ошибка: ${err?.message}\nСтек вызовов:\n${err?.stack}`);
-        alert(`Ошибка при регистрации ${JSON.stringify(error)}`);
+        alert(`Ошибка при регистрации ${JSON.stringify(error, null, 2)}`);
         return null
         //alert(`❌ Ошибка при регистрации ${error?.toString()}`);
     }
@@ -186,7 +185,7 @@ export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Arra
         }) as PublicKeyCredential;
 
         if (!credential) {
-            alert(`Ошибка аутентификации,  не получилось получить credential ${JSON.stringify(credential)}`);
+            alert(`Ошибка аутентификации,  не получилось получить credential ${JSON.stringify(credential, null, 2)}`);
             return null
         }
 
@@ -211,10 +210,10 @@ export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Arra
         if (result?.success) {
             return {salt, iv};
         }
-        alert(`Ошибка при fetch:${JSON.stringify(result)}`);
+        alert(`Ошибка при fetch:${JSON.stringify(result, null, 2)}`);
         return null
     } catch (error) {
-        alert(`Ошибка при создании largeBlob:${JSON.stringify(error)}`,);
+        alert(`Ошибка при создании largeBlob:${JSON.stringify(error, null, 2)}`,);
         return null
     }
 }
@@ -258,7 +257,7 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
         })) as PublicKeyCredential;
 
         if (!credential) {
-            alert(`Ошибка аутентификации,  не получилось получить credential ${JSON.stringify(credential)}`);
+            alert(`Ошибка аутентификации,  не получилось получить credential ${JSON.stringify(credential, null, 2)}`);
             return null
         }
         let result;
@@ -294,16 +293,16 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
 
                     return {salt, iv};
                 } else {
-                    alert(`largeBlob not exist: ${JSON.stringify(extensionResults)}`)
+                    alert(`largeBlob not exist: ${JSON.stringify(extensionResults, null, 2)}`)
                 }
             } else {
-                alert(`getClientExtensionResults not exist: ${JSON.stringify(credential)}`)
+                alert(`getClientExtensionResults not exist: ${JSON.stringify(credential, null, 2)}`)
             }
         }
-        alert(`Ошибка при fetch login:${JSON.stringify(result)}`,);
+        alert(`Ошибка при fetch login:${JSON.stringify(result, null, 2)}`,);
         return null
     } catch (error) {
-        alert(`Ошибка при входе:${JSON.stringify(error)}`,);
+        alert(`Ошибка при входе:${JSON.stringify(error, null, 2)}`,);
         return null
     }
 }
