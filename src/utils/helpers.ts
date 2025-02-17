@@ -296,8 +296,8 @@ export async function tryBiometricLogin(rawId:Uint8Array): Promise<{ salt: Uint8
                     const decodedData = JSON.parse(new TextDecoder().decode(blob));
                     const salt = new Uint8Array(decodedData.salt);
                     const iv = new Uint8Array(decodedData.iv);
-                    alert(`Извлеченная соль: ${JSON.stringify(salt)}`);
-                    alert(`Извлеченный IV: ${JSON.stringify(iv)}`);
+                    // alert(`Извлеченная соль: ${JSON.stringify(salt)}`);
+                    // alert(`Извлеченный IV: ${JSON.stringify(iv)}`);
 
                     return {salt, iv};
                 } else {
@@ -306,8 +306,9 @@ export async function tryBiometricLogin(rawId:Uint8Array): Promise<{ salt: Uint8
             } else {
                 alert(`getClientExtensionResults not exist: ${JSON.stringify(credential, null, 2)}`)
             }
+        } else {
+            alert(`Ошибка при fetch login:${JSON.stringify(result, null, 2)}`,);
         }
-        alert(`Ошибка при fetch login:${JSON.stringify(result, null, 2)}`,);
         return null
     } catch (error) {
         alert(`Ошибка при входе:${JSON.stringify(error, null, 2)}`,);
