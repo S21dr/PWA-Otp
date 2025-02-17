@@ -22,7 +22,6 @@ const OTPDisplay: React.FC<{ hideOtp: () => void }> = ({hideOtp}) => {
             if (salt && iv) {
                 const encryptedSecret = await encrypt(secret, salt, iv);
                 await setItem("settings", "seed", encryptedSecret)
-                alert(`encryptedSecret and set to db`)
                 setOtp(otp);
             } else {
                 hideOtp()
@@ -31,7 +30,7 @@ const OTPDisplay: React.FC<{ hideOtp: () => void }> = ({hideOtp}) => {
             const seed = store.getState().idb.seed;
             if (seed && salt && iv) {
                 const secret = await decrypt(seed, salt, iv);
-                alert(`decryptedSecret: ${JSON.stringify(secret)}`)
+                //alert(`decryptedSecret: ${JSON.stringify(secret)}`)
                 const otp = authenticator.generate(secret)
                 setOtp(otp);
             } else {

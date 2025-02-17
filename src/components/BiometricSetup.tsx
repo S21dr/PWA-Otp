@@ -12,10 +12,10 @@ const BiometricSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
                 await setItem("settings", "rawId", Array.from(new Uint8Array(rawId)))
                 onComplete();
             } else {
-                alert("Ошибка регистрации биометрии.");
+                alert(`"Ошибка получения rawId:${JSON.stringify(rawId)}`);
             }
         } catch (error) {
-            console.error(error);
+            alert(`"Ошибка регистрации биометрии:${JSON.stringify(error)}`);
         }
     };
 

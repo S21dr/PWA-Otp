@@ -116,7 +116,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
 
 
         if (!credential) {
-            console.error("Ошибка при создании ключа");
+            alert(`Ошибка при создании ключа ${JSON.stringify(credential)}`);
             return null
         }
 
@@ -138,10 +138,11 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         if (registration?.success) {
             return credential.rawId
         }
+        alert(`Ошибка при registration ключа ${JSON.stringify(registration)}`);
         return null
 
     } catch (error) {
-        console.error("Ошибка при регистрации:", error);
+        alert(`Ошибка при регистрации ${JSON.stringify(error)}`);
         return null
         //alert(`❌ Ошибка при регистрации ${error?.toString()}`);
     }
@@ -177,7 +178,7 @@ export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Arra
         }) as PublicKeyCredential;
 
         if (!credential) {
-            console.error("Ошибка аутентификации,  не получилось получить credential");
+            alert(`Ошибка аутентификации,  не получилось получить credential ${JSON.stringify(credential)}`);
             return null
         }
 
@@ -202,6 +203,7 @@ export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Arra
         if (result?.success) {
             return {salt, iv};
         }
+        alert(`Ошибка при fetch:${JSON.stringify(result)}`);
         return null
     } catch (error) {
         alert(`Ошибка при создании largeBlob:${JSON.stringify(error)}`,);
@@ -227,21 +229,20 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
             extensions: {
                 largeBlob: {read: true} // Запрашиваем данные из largeBlob
             }
-        }  as  PublicKeyCredentialRequestOptions
+        } as PublicKeyCredentialRequestOptions
 
-        if (navigator?.onLine){
+        if (navigator?.onLine) {
             const response = await fetch("/api/login-challenge", {
                 method: "POST",
             });
 
             publicKey = await response.json() as PublicKeyCredentialRequestOptions;
             // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
-            publicKey.challenge = new Uint8Array(publicKey?.challenge as  ArrayBuffer).buffer;
+            publicKey.challenge = new Uint8Array(publicKey?.challenge as ArrayBuffer).buffer;
             publicKey.extensions = {
                 largeBlob: {read: true}
-            } as  AuthenticationExtensionsClientInputs
+            } as AuthenticationExtensionsClientInputs
         }
-
 
 
         const credential = (await navigator.credentials.get({
@@ -249,11 +250,11 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
         })) as PublicKeyCredential;
 
         if (!credential) {
-            console.error("Ошибка аутентификации,  не получилось получить credential");
+            alert(`Ошибка аутентификации,  не получилось получить credential ${JSON.stringify(credential)}`);
             return null
         }
         let result;
-        if (navigator?.onLine){
+        if (navigator?.onLine) {
             const loginResponse = await fetch("/api/login", {
                 method: "POST",
                 headers: {"Content-Type": "application/json"},
@@ -291,7 +292,7 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
                 alert(`getClientExtensionResults not exist: ${JSON.stringify(credential)}`)
             }
         }
-
+        alert(`Ошибка при fetch login:${JSON.stringify(result)}`,);
         return null
     } catch (error) {
         alert(`Ошибка при входе:${JSON.stringify(error)}`,);
@@ -299,7 +300,7 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
     }
 }
 
-export const fetchSeed   = async ():Promise<string> => {
+export const fetchSeed = async (): Promise<string> => {
     const fetchSeedResponse = await fetch("/api/get-seed", {
         method: "POST",
         headers: {"Content-Type": "application/json"},
