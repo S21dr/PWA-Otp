@@ -10,7 +10,7 @@ const App: FC = () => {
     const rawId = (store.getState() as RootState).idb.rawId
 
     useEffect(() => {
-        if (rawId.length) {
+        if (rawId) {
             setStep(2)
         }
     }, [rawId]);

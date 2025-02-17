@@ -154,7 +154,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
 }
 
 //
-export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
+export async function saveLargeBlob(rawId:Uint8Array): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
     if (!window.PublicKeyCredential) return null;
     try {
         const response = await fetch("/api/login-challenge", {
@@ -176,6 +176,10 @@ export async function saveLargeBlob(): Promise<{ salt: Uint8Array, iv: Uint8Arra
         const credential = await navigator.credentials.get({
             publicKey: {
                 ...publicKey,
+                allowCredentials: [{
+                    type: 'public-key',
+                    id: rawId, // Используем rawId
+                }],
                 extensions: {
                     largeBlob: {write: blobData} // Запрашиваем данные из largeBlob
                 }
@@ -223,7 +227,7 @@ const generateChallenge = () => {
 };
 
 // Функция для аутентификации по биометрии
-export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
+export async function tryBiometricLogin(rawId:Uint8Array): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
     if (!window.PublicKeyCredential) return null;
     try {
         let publicKey = {
@@ -251,7 +255,13 @@ export async function tryBiometricLogin(): Promise<{ salt: Uint8Array, iv: Uint8
 
 
         const credential = (await navigator.credentials.get({
-            publicKey,
+            publicKey:{
+                ...publicKey,
+                allowCredentials: [{
+                    type: 'public-key',
+                    id: rawId, // Используем rawId
+                }],
+            },
         })) as PublicKeyCredential;
 
         if (!credential) {

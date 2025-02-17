@@ -4,7 +4,7 @@ import {DBSchema, IDBPDatabase, openDB,} from 'idb';
 export interface AppDB  extends DBSchema {
     settings: {
         key: IDBValidKey;
-        value: string | number[] | ArrayBuffer;
+        value: string  | ArrayBuffer | Uint8Array ;
     };
 }
 

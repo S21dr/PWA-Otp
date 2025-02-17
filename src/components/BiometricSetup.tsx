@@ -8,8 +8,8 @@ const BiometricSetup: React.FC<{ onComplete: () => void }> = ({ onComplete }) =>
         try {
             const rawId = await registerBiometric();
             if (rawId) {
-                setRawId(Array.from(new Uint8Array(rawId)));
-                await setItem("settings", "rawId", Array.from(new Uint8Array(rawId)))
+                setRawId(new Uint8Array(rawId));
+                await setItem("settings", "rawId", new Uint8Array(rawId))
                 onComplete();
             } else {
                 alert(`"Ошибка получения rawId:${JSON.stringify(rawId)}`);

@@ -8,24 +8,26 @@ import {useDispatch} from "react-redux";
 const BiometricLogIn: FC<{ onComplete: () => void }> = ({onComplete}) => {
 
     const dispatch = useDispatch();
+    const rawId = store.getState().idb.rawId
 
     const logInBio = async () => {
-        if ((store.getState() as RootState).idb.seed) {
-            const largeBlob = await tryBiometricLogin()
-            if (largeBlob) {
-                dispatch(setSalt(largeBlob.salt))
-                dispatch(setIv(largeBlob.iv))
-                onComplete()
-            }
-        } else {
-            const largeBlob = await saveLargeBlob()
-            if (largeBlob) {
-                dispatch(setSalt(largeBlob.salt))
-                dispatch(setIv(largeBlob.iv))
-                onComplete()
+        if (rawId){
+            if ((store.getState() as RootState).idb.seed) {
+                const largeBlob = await tryBiometricLogin(rawId)
+                if (largeBlob) {
+                    dispatch(setSalt(largeBlob.salt))
+                    dispatch(setIv(largeBlob.iv))
+                    onComplete()
+                }
+            } else {
+                const largeBlob = await saveLargeBlob(rawId)
+                if (largeBlob) {
+                    dispatch(setSalt(largeBlob.salt))
+                    dispatch(setIv(largeBlob.iv))
+                    onComplete()
+                }
             }
         }
-
     };
 
 

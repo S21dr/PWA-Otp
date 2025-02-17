@@ -12,8 +12,7 @@ const LoadApp = ({children}: { children: React.ReactNode }) => {
         dispatch(setDB(db))
         const rawId = await db.get("settings","rawId")
         if (rawId) {
-            console.log("pop")
-            dispatch(setRawId(rawId as number[]))
+            dispatch(setRawId(rawId as Uint8Array))
         }
         const seed = await db.get("settings","seed")
         if (seed) {
