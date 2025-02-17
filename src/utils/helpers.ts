@@ -97,7 +97,6 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         const response = await fetch("/api/register-challenge", {
             method: "POST",
         });
-        alert(`response ${JSON.stringify(response, null, 2)}`);
         const res = await response.json();
         const {publicKey} = res
 
@@ -107,7 +106,6 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         // Преобразуем user.id из ArrayBuffer в Uint8Array
         publicKey.user.id = new Uint8Array(2);
 
-        alert(`publicKey ${JSON.stringify(publicKey, null, 2)}`);
         const credential = (await navigator.credentials.create({
             publicKey: {
                 ...publicKey,
