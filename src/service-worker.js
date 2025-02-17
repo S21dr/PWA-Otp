@@ -1,5 +1,13 @@
 import {cleanupOutdatedCaches, precacheAndRoute} from 'workbox-precaching';
 
+// 🔹 Активируем новый Service Worker сразу после установки
+self.addEventListener('install', (event) => {
+    self.skipWaiting();
+});
+
+self.addEventListener("activate", (event) => {
+    event.waitUntil(self.clients.claim()); // Принудительно активируем SW
+});
 
 
 cleanupOutdatedCaches()
@@ -94,14 +102,6 @@ self.addEventListener('fetch', (event) => {
     }
 });
 
-// 🔹 Активируем новый Service Worker сразу после установки
-self.addEventListener('install', (event) => {
-    self.skipWaiting();
-});
-
-self.addEventListener("activate", (event) => {
-    event.waitUntil(self.clients.claim()); // Принудительно активируем SW
-});
 
 
 

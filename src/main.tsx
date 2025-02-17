@@ -11,15 +11,24 @@ import LoadApp from "./LoadApp.tsx";
 const root = createRoot(document.getElementById('root') as HTMLElement)
 
 const prepareApp = async () => {
-    // if ('serviceWorker' in navigator) {
-    //     await navigator.serviceWorker.register('./service-worker.js',);
-    // }
-    // const {worker} = await import('./mocks/browser')
-    // return worker.start({
-    //     serviceWorker: {
-    //         url: "./mockServiceWorker.js",
-    //     },
-    // });
+    if (import.meta.env.MODE === 'production') {
+        try {
+            // Ждем готовности Service Worker с таймаутом
+            await Promise.race([
+                navigator.serviceWorker.ready,
+                new Promise((_, reject) => setTimeout(() => reject(new Error('Service Worker timeout')), 5000)), // Таймаут 5 секунд
+            ]);
+        } catch (error) {
+            console.error('Ошибка при ожидании Service Worker:', error);
+        }
+    } else {
+        const {worker} = await import('./mocks/browser')
+        return worker.start({
+            serviceWorker: {
+                url: "./mockServiceWorker.js",
+            },
+        });
+    }
 }
 
 
