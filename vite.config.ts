@@ -53,5 +53,8 @@ export default defineConfig({
             },
         }),
     ],
+    build: {
+        sourcemap: true,
+    },
     base: "/PWA-Otp/", // YOUR REPO NAME HERE
 })
