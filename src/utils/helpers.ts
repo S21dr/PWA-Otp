@@ -215,6 +215,7 @@ export async function saveLargeBlob(rawId:Uint8Array): Promise<{ salt: Uint8Arra
         alert(`Ошибка при fetch:${JSON.stringify(result, null, 2)}`);
         return null
     } catch (error) {
+        console.log("Ошибка при создании largeBlob:", error);
         alert(`Ошибка при создании largeBlob:${JSON.stringify(error, null, 2)}`,);
         return null
     }
