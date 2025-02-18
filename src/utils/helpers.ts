@@ -235,7 +235,7 @@ export async function tryBiometricLogin(rawId:Uint8Array): Promise<{ salt: Uint8
             challenge: generateChallenge(),
             timeout: 60000,
             rpId: "s21dr.github.io",
-            userVerification: "required",
+            userVerification: "preferred",
             extensions: {
                 largeBlob: {read: true} // Запрашиваем данные из largeBlob
             }

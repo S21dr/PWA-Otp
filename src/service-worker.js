@@ -69,7 +69,7 @@ const mockData = {
             challenge: generateChallenge(), // ✅ challenge в формате ArrayBuffer
             timeout: 60000,
             rpId: RP_ID,
-            userVerification: "required",
+            userVerification: "preferred",
         },
     },
     'https://s21dr.github.io/api/register': {
