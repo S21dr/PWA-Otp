@@ -110,11 +110,11 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
             publicKey: {
                 ...publicKey,
                 // **Используем largeBlob для хранения соли**
-                // extensions: {
-                //     largeBlob: {
-                //         support: "required",
-                //     }
-                // }
+                extensions: {
+                    largeBlob: {
+                        support: "required",
+                    }
+                }
             },
         })) as PublicKeyCredential;
 
