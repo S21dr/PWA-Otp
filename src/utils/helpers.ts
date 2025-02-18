@@ -123,7 +123,10 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
             alert(`Ошибка при создании ключа ${JSON.stringify(credential, null, 2)}`);
             return null
         }
-
+        if (credential && "getClientExtensionResults" in credential) {
+            const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
+            console.log("extensionResults", extensionResults);
+        }
         const regResp = await fetch("/api/register", {
             method: "POST",
             headers: {"Content-Type": "application/json"},
