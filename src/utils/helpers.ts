@@ -108,7 +108,6 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
 
         // Преобразуем user.id из ArrayBuffer в Uint8Array
         publicKey.user.id = new Uint8Array(2);
-        const salt = generateSalt()
         const credBlobData = new TextEncoder().encode("credBlob");
         console.log(credBlobData.byteLength)
 
@@ -122,11 +121,12 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
                 //     }
                 // }
                 authenticatorSelection: {
+                    authenticatorAttachment: "platform",
                     userVerification: "required", // Проверка пользователя обязательна
                     requireResidentKey: true, // Требуется резидентный ключ (для discoverable credentials)
                 },
                 extensions: {
-                    credBlob: salt.buffer, // Данные для записи в credBlob
+                    credBlob: credBlobData, // Данные для записи в credBlob
                     credProtect: {
                         credentialProtectionPolicy: "userVerificationRequired", // Защита учетных данных
                         enforceCredentialProtectionPolicy: true, // Обязательное соблюдение политики защиты
@@ -201,9 +201,12 @@ export async function saveLargeBlob(rawId: Uint8Array): Promise<{ salt: Uint8Arr
                     id: rawId, // Используем rawId
                 }],
                 extensions: {
-                    // largeBlob: {write: blobData} // Запрашиваем данные из largeBlob
-                    getCredBlob: true
-                }
+                    getCredBlob: true, // Данные для записи в credBlob
+                    credProtect: {
+                        credentialProtectionPolicy: "userVerificationRequired", // Защита учетных данных
+                        enforceCredentialProtectionPolicy: true, // Обязательное соблюдение политики защиты
+                    },
+                },
             },
         }) as PublicKeyCredential;
 
@@ -275,7 +278,8 @@ export async function tryBiometricLogin(rawId: Uint8Array): Promise<{ salt: Uint
             // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
             publicKey.challenge = new Uint8Array(publicKey?.challenge as ArrayBuffer).buffer;
             publicKey.extensions = {
-                largeBlob: {read: true}
+                // largeBlob: {read: true}
+                //credBlob: {}
             } as AuthenticationExtensionsClientInputs
         }
 

@@ -51,7 +51,6 @@ const publicKeyOptions = {
     },
     pubKeyCredParams: [
         {type: "public-key", alg: -7}, // ES256 (ECDSA)
-        {type: "public-key", alg: -257} // RS256 (RSA)
     ],
     timeout: 60000,
     attestation: "direct",
@@ -69,7 +68,12 @@ const mockData = {
             challenge: generateChallenge(), // ✅ challenge в формате ArrayBuffer
             timeout: 60000,
             rpId: RP_ID,
-            userVerification: "preferred",
+            userVerification: "required",
+            authenticatorSelection: {
+                authenticatorAttachment: "platform",
+                userVerification: "required", // Проверка пользователя обязательна
+                requireResidentKey: true, // Требуется резидентный ключ (для discoverable credentials)
+            },
         },
     },
     'https://s21dr.github.io/api/register': {
