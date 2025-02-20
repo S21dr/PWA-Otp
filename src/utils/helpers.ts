@@ -105,16 +105,30 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
 
         // Преобразуем user.id из ArrayBuffer в Uint8Array
         publicKey.user.id = new Uint8Array(2);
+        const salt = generateSalt()
+        const credBlobData = new TextEncoder().encode("credBlob");
+        console.log(credBlobData.byteLength)
 
         const credential = (await navigator.credentials.create({
             publicKey: {
                 ...publicKey,
                 // **Используем largeBlob для хранения соли**
+                // extensions: {
+                //     largeBlob: {
+                //         support: "required",
+                //     }
+                // }
+                authenticatorSelection: {
+                    userVerification: "required", // Проверка пользователя обязательна
+                    requireResidentKey: true, // Требуется резидентный ключ (для discoverable credentials)
+                },
                 extensions: {
-                    largeBlob: {
-                        support: "required",
-                    }
-                }
+                    credBlob: salt.buffer, // Данные для записи в credBlob
+                    credProtect: {
+                        credentialProtectionPolicy: "userVerificationRequired", // Защита учетных данных
+                        enforceCredentialProtectionPolicy: true, // Обязательное соблюдение политики защиты
+                    },
+                },
             },
         })) as PublicKeyCredential;
 
@@ -125,7 +139,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         }
         if (credential && "getClientExtensionResults" in credential) {
             const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
-            console.log("extensionResults", extensionResults);
+            alert(JSON.stringify(extensionResults, null, 2));
         }
         const regResp = await fetch("/api/register", {
             method: "POST",
