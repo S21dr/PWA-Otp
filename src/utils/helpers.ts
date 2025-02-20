@@ -89,6 +89,13 @@ export async function decrypt(encryptedSecret: ArrayBuffer, salt: Uint8Array, iv
     return decoder.decode(decryptedData);
 }
 
+function info(msg:string) {
+    const element = document.createElement('pre');
+    element.innerHTML = msg;
+    element.className = 'info';
+    document.getElementById('msg')?.appendChild(element);
+}
+
 // Функция для регистрации биометрии
 
 export async function registerBiometric(): Promise<null | ArrayBuffer> {
@@ -139,7 +146,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         }
         if (credential && "getClientExtensionResults" in credential) {
             const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
-            alert(JSON.stringify(extensionResults, null, 2));
+            info(JSON.stringify(extensionResults, null, 2))
         }
         const regResp = await fetch("/api/register", {
             method: "POST",
