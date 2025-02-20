@@ -1,3 +1,5 @@
+import {info} from "./common";
+
 interface ExtendedAuthenticationExtensionsClientOutputs extends AuthenticationExtensionsClientOutputs {
     largeBlob?: { blob: ArrayBuffer };
 }
@@ -89,12 +91,6 @@ export async function decrypt(encryptedSecret: ArrayBuffer, salt: Uint8Array, iv
     return decoder.decode(decryptedData);
 }
 
-function info(msg:string) {
-    const element = document.createElement('pre');
-    element.innerHTML = msg;
-    element.className = 'info';
-    document.getElementById('msg')?.appendChild(element);
-}
 
 // Функция для регистрации биометрии
 
@@ -170,7 +166,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         return null
 
     } catch (error) {
-        console.log("error",error as IError)
+        console.log("error", error as IError)
         alert(`Ошибка при регистрации ${JSON.stringify(error, null, 2)}`);
         return null
         //alert(`❌ Ошибка при регистрации ${error?.toString()}`);
@@ -178,7 +174,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
 }
 
 //
-export async function saveLargeBlob(rawId:Uint8Array): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
+export async function saveLargeBlob(rawId: Uint8Array): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
     if (!window.PublicKeyCredential) return null;
     try {
         const response = await fetch("/api/login-challenge", {
@@ -196,7 +192,7 @@ export async function saveLargeBlob(rawId:Uint8Array): Promise<{ salt: Uint8Arra
             salt: Array.from(salt),
             iv: Array.from(iv)
         }));
-
+        console.log(blobData);
         const credential = await navigator.credentials.get({
             publicKey: {
                 ...publicKey,
@@ -205,7 +201,8 @@ export async function saveLargeBlob(rawId:Uint8Array): Promise<{ salt: Uint8Arra
                     id: rawId, // Используем rawId
                 }],
                 extensions: {
-                    largeBlob: {write: blobData} // Запрашиваем данные из largeBlob
+                    // largeBlob: {write: blobData} // Запрашиваем данные из largeBlob
+                    getCredBlob: true
                 }
             },
         }) as PublicKeyCredential;
@@ -213,6 +210,10 @@ export async function saveLargeBlob(rawId:Uint8Array): Promise<{ salt: Uint8Arra
         if (!credential) {
             alert(`Ошибка аутентификации,  не получилось получить credential ${JSON.stringify(credential, null, 2)}`);
             return null
+        }
+        if (credential && "getClientExtensionResults" in credential) {
+            const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
+            info(JSON.stringify(extensionResults, null, 2))
         }
 
         const loginResponse = await fetch("/api/login", {
@@ -252,7 +253,7 @@ const generateChallenge = () => {
 };
 
 // Функция для аутентификации по биометрии
-export async function tryBiometricLogin(rawId:Uint8Array): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
+export async function tryBiometricLogin(rawId: Uint8Array): Promise<{ salt: Uint8Array, iv: Uint8Array } | null> {
     if (!window.PublicKeyCredential) return null;
     try {
         let publicKey = {
@@ -280,7 +281,7 @@ export async function tryBiometricLogin(rawId:Uint8Array): Promise<{ salt: Uint8
 
 
         const credential = (await navigator.credentials.get({
-            publicKey:{
+            publicKey: {
                 ...publicKey,
                 allowCredentials: [{
                     type: 'public-key',
