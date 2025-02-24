@@ -1,5 +1,3 @@
-import {info} from "./common";
-
 interface ExtendedAuthenticationExtensionsClientOutputs extends AuthenticationExtensionsClientOutputs {
     largeBlob?: { blob: ArrayBuffer };
 }
@@ -91,7 +89,6 @@ export async function decrypt(encryptedSecret: ArrayBuffer, salt: Uint8Array, iv
     return decoder.decode(decryptedData);
 }
 
-
 // Функция для регистрации биометрии
 
 export async function registerBiometric(): Promise<null | ArrayBuffer> {
@@ -108,30 +105,21 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
 
         // Преобразуем user.id из ArrayBuffer в Uint8Array
         publicKey.user.id = new Uint8Array(2);
-        const credBlobData = new TextEncoder().encode("credBlob");
-        console.log(credBlobData.byteLength)
 
         const credential = (await navigator.credentials.create({
             publicKey: {
                 ...publicKey,
-                // **Используем largeBlob для хранения соли**
-                // extensions: {
-                //     largeBlob: {
-                //         support: "required",
-                //     }
-                // }
                 authenticatorSelection: {
                     authenticatorAttachment: "platform",
                     userVerification: "required", // Проверка пользователя обязательна
                     requireResidentKey: true, // Требуется резидентный ключ (для discoverable credentials)
                 },
+                // **Используем largeBlob для хранения соли**
                 extensions: {
-                    credBlob: credBlobData, // Данные для записи в credBlob
-                    credProtect: {
-                        credentialProtectionPolicy: "userVerificationRequired", // Защита учетных данных
-                        enforceCredentialProtectionPolicy: true, // Обязательное соблюдение политики защиты
-                    },
-                },
+                    largeBlob: {
+                        support: "required",
+                    }
+                }
             },
         })) as PublicKeyCredential;
 
@@ -142,7 +130,7 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
         }
         if (credential && "getClientExtensionResults" in credential) {
             const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
-            info(JSON.stringify(extensionResults, null, 2))
+            console.log("extensionResults", extensionResults);
         }
         const regResp = await fetch("/api/register", {
             method: "POST",
@@ -192,7 +180,7 @@ export async function saveLargeBlob(rawId: Uint8Array): Promise<{ salt: Uint8Arr
             salt: Array.from(salt),
             iv: Array.from(iv)
         }));
-        console.log(blobData);
+
         const credential = await navigator.credentials.get({
             publicKey: {
                 ...publicKey,
@@ -201,22 +189,14 @@ export async function saveLargeBlob(rawId: Uint8Array): Promise<{ salt: Uint8Arr
                     id: rawId, // Используем rawId
                 }],
                 extensions: {
-                    getCredBlob: true, // Данные для записи в credBlob
-                    credProtect: {
-                        credentialProtectionPolicy: "userVerificationRequired", // Защита учетных данных
-                        enforceCredentialProtectionPolicy: true, // Обязательное соблюдение политики защиты
-                    },
-                },
+                    largeBlob: {write: blobData} // Запрашиваем данные из largeBlob
+                }
             },
         }) as PublicKeyCredential;
 
         if (!credential) {
             alert(`Ошибка аутентификации,  не получилось получить credential ${JSON.stringify(credential, null, 2)}`);
             return null
-        }
-        if (credential && "getClientExtensionResults" in credential) {
-            const extensionResults = credential.getClientExtensionResults() as ExtendedAuthenticationExtensionsClientOutputs;
-            info(JSON.stringify(extensionResults, null, 2))
         }
 
         const loginResponse = await fetch("/api/login", {
@@ -278,8 +258,7 @@ export async function tryBiometricLogin(rawId: Uint8Array): Promise<{ salt: Uint
             // Преобразуем challenge в ArrayBuffer (если сервер не отправил в нужном формате)
             publicKey.challenge = new Uint8Array(publicKey?.challenge as ArrayBuffer).buffer;
             publicKey.extensions = {
-                // largeBlob: {read: true}
-                //credBlob: {}
+                largeBlob: {read: true}
             } as AuthenticationExtensionsClientInputs
         }
 
