@@ -1,5 +1,5 @@
 import {useCallback, useEffect, useState} from "react";
-import {Box, Typography, Button} from "@mui/material";
+import {Box, Typography, Button, Radio, FormControl, RadioGroup, FormControlLabel} from "@mui/material";
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-expect-error
 import {authenticator} from "@otplib/preset-browser";
@@ -12,6 +12,12 @@ const OTPDisplay: React.FC<{ hideOtp: () => void }> = ({hideOtp}) => {
     const [loadOtp, setLoadOtp] = useState(false)
     const salt = store.getState().idb.salt;
     const iv = store.getState().idb.iv;
+
+    const [value, setValue] = useState('_self');
+
+    const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        setValue((event.target as HTMLInputElement).value);
+    };
 
 
     const onMount = useCallback(async () => {
@@ -46,6 +52,23 @@ const OTPDisplay: React.FC<{ hideOtp: () => void }> = ({hideOtp}) => {
 
     return (
         <Box textAlign="center">
+            <div>
+                <a target={value} href="https://pwatestmvp.ru">pwatestmvp.ru</a>
+            </div>
+            <FormControl style={{marginBottom:64}}>
+                <RadioGroup
+                    aria-labelledby="demo-controlled-radio-buttons-group"
+                    name="controlled-radio-buttons-group"
+                    value={value}
+                    onChange={handleChange}
+                >
+                    <FormControlLabel value="_self" control={<Radio />} label="default" />
+                    <FormControlLabel value="_blank" control={<Radio />} label="blank" />
+                    <FormControlLabel value="_parent" control={<Radio />} label="parent" />
+                    <FormControlLabel value="_top" control={<Radio />} label="top" />
+                </RadioGroup>
+            </FormControl>
+
             <Typography variant="h5">Ваш OTP-код:</Typography>
             {
                 loadOtp ? <Typography variant="h4" color="primary" sx={{mt: 2}}>
@@ -55,9 +78,11 @@ const OTPDisplay: React.FC<{ hideOtp: () => void }> = ({hideOtp}) => {
                 </Typography>
             }
 
-            <Button variant="contained" sx={{mt: 2}} onClick={() => navigator.clipboard.writeText(otp)}>
-                Копировать
-            </Button>
+           <div>
+               <Button variant="contained" sx={{mt: 2}} onClick={() => navigator.clipboard.writeText(otp)}>
+                   Копировать
+               </Button>
+           </div>
         </Box>
     );
 };
