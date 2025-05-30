@@ -70,7 +70,6 @@ const mockData = {
             rpId: RP_ID,
             userVerification: "required",
             authenticatorSelection: {
-                authenticatorAttachment: "platform",
                 userVerification: "required", // Проверка пользователя обязательна
                 requireResidentKey: true, // Требуется резидентный ключ (для discoverable credentials)
             },

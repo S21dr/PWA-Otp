@@ -110,7 +110,6 @@ export async function registerBiometric(): Promise<null | ArrayBuffer> {
             publicKey: {
                 ...publicKey,
                 authenticatorSelection: {
-                    authenticatorAttachment: "platform",
                     userVerification: "required", // Проверка пользователя обязательна
                     requireResidentKey: true, // Требуется резидентный ключ (для discoverable credentials)
                 },
